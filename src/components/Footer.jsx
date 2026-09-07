@@ -4,9 +4,9 @@ function Footer() {
       <div className="footer-container">
 
         <div>
-          <h3>ORGANISASI SISWA</h3>
+          <h3>ECC</h3>
           <p>
-            Website resmi organisasi siswa.
+            Website resmi ecc organisasi.
           </p>
         </div>
 
@@ -26,7 +26,7 @@ function Footer() {
       </div>
 
       <div className="footer-bottom">
-        © 2026 Organisasi Siswa. All Rights Reserved.
+        © 2026 ENGLISH CONVERSATION CLUB. All Rights Reserved.
       </div>
     </footer>
   );

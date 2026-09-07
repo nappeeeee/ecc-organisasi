@@ -289,7 +289,7 @@ function Home() {
           <div className="hero-content">
 
             <span className="hero-badge">
-              ORGANISASI SISWA
+              ENGLISH CONVERSATION CLUB
             </span>
 
             <h1>

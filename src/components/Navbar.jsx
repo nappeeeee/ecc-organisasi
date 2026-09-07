@@ -24,7 +24,7 @@ function Navbar() {
           className="navbar-logo"
           onClick={closeMenu}
         >
-          ORGANISASI
+          ECC
         </Link>
 
 

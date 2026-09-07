@@ -18,8 +18,17 @@ function Footer() {
 
         <div>
           <h4>Kontak</h4>
-          <p>Email: organisasi@example.com</p>
-          <p>Instagram: @organisasi</p>
+          <p>Email: -</p>
+          <p>
+            Instagram:{" "}
+            <a
+              href="https://www.instagram.com/ecc_smala/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              @ecc_smala
+            </a>
+          </p>
         </div>
 
       </div>

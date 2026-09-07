@@ -3038,3 +3038,16 @@ a {
   }
 
 }
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.navbar-logo-image {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+}

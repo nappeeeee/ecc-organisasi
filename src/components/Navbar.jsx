@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import eccLogo from "../img/ecc.png";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -18,15 +19,20 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-container">
 
-        {/* LOGO */}
-        <Link
-          to="/"
-          className="navbar-logo"
-          onClick={closeMenu}
-        >
-          ECC
-        </Link>
-
+        
+          {/* LOGO */}
+          <Link
+            to="/"
+            className="navbar-logo"
+            onClick={closeMenu}
+          >
+            <img
+              src={eccLogo}
+              alt="ECC Logo"
+              className="navbar-logo-image"
+            />
+          </Link>
+          
 
         {/* DESKTOP MENU */}
         <div className="navbar-menu">

@@ -4,7 +4,6 @@ function Footer() {
       <div className="footer-container">
 
         <div>
-          <h3>ECC</h3>
           <p>
             Website resmi ecc organisasi.
           </p>

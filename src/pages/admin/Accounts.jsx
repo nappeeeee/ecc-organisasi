@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   createAccount,
@@ -12,26 +12,49 @@ import { auth } from "../../firebase/config";
 
 function Accounts() {
 
-  const [accounts, setAccounts] =
-    useState([]);
+  // =========================================================
+  // ACCOUNTS
+  // =========================================================
 
-  const [loading, setLoading] =
-    useState(true);
+  const [accounts, setAccounts] = useState([]);
 
-  const [showForm, setShowForm] =
-    useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [editingAccount, setEditingAccount] =
-    useState(null);
 
-  const [saving, setSaving] =
-    useState(false);
+  // =========================================================
+  // FORM
+  // =========================================================
 
-  const [error, setError] =
-    useState("");
+  const [showForm, setShowForm] = useState(false);
 
-  const [success, setSuccess] =
-    useState("");
+  const [editingAccount, setEditingAccount] = useState(null);
+
+  const [saving, setSaving] = useState(false);
+
+
+  // =========================================================
+  // MESSAGE
+  // =========================================================
+
+  const [error, setError] = useState("");
+
+  const [success, setSuccess] = useState("");
+
+
+  // =========================================================
+  // SEARCH
+  // =========================================================
+
+  const [search, setSearch] = useState("");
+
+
+  // =========================================================
+  // PAGINATION
+  // =========================================================
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const accountsPerPage = 10;
 
 
   // =========================================================
@@ -58,8 +81,7 @@ function Accounts() {
       setLoading(true);
       setError("");
 
-      const data =
-        await getAccounts();
+      const data = await getAccounts();
 
       setAccounts(data);
 
@@ -82,6 +104,10 @@ function Accounts() {
 
   };
 
+
+  // =========================================================
+  // INITIAL LOAD
+  // =========================================================
 
   useEffect(() => {
 
@@ -106,6 +132,128 @@ function Accounts() {
       ...formData,
       [name]: value,
     });
+
+  };
+
+
+  // =========================================================
+  // SEARCH FILTER
+  // =========================================================
+
+  const filteredAccounts = useMemo(() => {
+
+    const keyword =
+      search
+        .trim()
+        .toLowerCase();
+
+
+    if (!keyword) {
+
+      return accounts;
+
+    }
+
+
+    return accounts.filter(
+      (account) =>
+        (account.name || "")
+          .toLowerCase()
+          .includes(keyword)
+    );
+
+  }, [accounts, search]);
+
+
+  // =========================================================
+  // PAGINATION DATA
+  // =========================================================
+
+  const totalPages =
+    Math.ceil(
+      filteredAccounts.length /
+        accountsPerPage
+    );
+
+
+  const startIndex =
+    (currentPage - 1) *
+    accountsPerPage;
+
+
+  const endIndex =
+    startIndex +
+    accountsPerPage;
+
+
+  const currentAccounts =
+    filteredAccounts.slice(
+      startIndex,
+      endIndex
+    );
+
+
+  // =========================================================
+  // RESET PAGE SAAT SEARCH
+  // =========================================================
+
+  useEffect(() => {
+
+    setCurrentPage(1);
+
+  }, [search]);
+
+
+  // =========================================================
+  // JAGA CURRENT PAGE
+  // =========================================================
+
+  useEffect(() => {
+
+    if (
+      totalPages > 0 &&
+      currentPage > totalPages
+    ) {
+
+      setCurrentPage(totalPages);
+
+    }
+
+  }, [
+    totalPages,
+    currentPage,
+  ]);
+
+
+  // =========================================================
+  // PAGINATION
+  // =========================================================
+
+  const handlePreviousPage = () => {
+
+    if (currentPage > 1) {
+
+      setCurrentPage(
+        currentPage - 1
+      );
+
+    }
+
+  };
+
+
+  const handleNextPage = () => {
+
+    if (
+      currentPage <
+      totalPages
+    ) {
+
+      setCurrentPage(
+        currentPage + 1
+      );
+
+    }
 
   };
 
@@ -194,94 +342,42 @@ function Accounts() {
   // DELETE ACCOUNT
   // =========================================================
 
-  const handleDelete =
-    async (account) => {
+  const handleDelete = async (account) => {
 
-      const currentUser =
-        auth.currentUser;
-
-
-      if (
-        currentUser?.uid ===
-        account.id
-      ) {
-
-        setError(
-          "Anda tidak dapat menghapus akun yang sedang digunakan."
-        );
-
-        return;
-
-      }
+    const currentUser =
+      auth.currentUser;
 
 
-      const confirmed =
-        window.confirm(
-          `Apakah Anda yakin ingin menghapus akun "${account.name || account.email}"?\n\nAkun akan dihapus secara permanen.`
-        );
+    // Tidak boleh menghapus akun sendiri
+
+    if (
+      currentUser?.uid ===
+      account.id
+    ) {
+
+      setError(
+        "Anda tidak dapat menghapus akun yang sedang digunakan."
+      );
+
+      return;
+
+    }
 
 
-      if (!confirmed) {
-
-        return;
-
-      }
-
-
-      try {
-
-        setError("");
-
-        setSuccess("");
-
-        setSaving(true);
+    const confirmed =
+      window.confirm(
+        `Apakah Anda yakin ingin menghapus akun "${account.name || account.email}"?\n\nAkun akan dihapus secara permanen.`
+      );
 
 
-        await deleteAccount(
-          account.id
-        );
+    if (!confirmed) {
+
+      return;
+
+    }
 
 
-        setSuccess(
-          `Akun ${
-            account.name ||
-            account.email
-          } berhasil dihapus.`
-        );
-
-
-        await loadAccounts();
-
-      } catch (error) {
-
-        console.error(
-          "Gagal menghapus akun:",
-          error
-        );
-
-
-        setError(
-          error.message ||
-          "Gagal menghapus akun. Silakan coba lagi."
-        );
-
-      } finally {
-
-        setSaving(false);
-
-      }
-
-    };
-
-
-  // =========================================================
-  // SUBMIT FORM
-  // =========================================================
-
-  const handleSubmit =
-    async (e) => {
-
-      e.preventDefault();
+    try {
 
       setError("");
 
@@ -290,140 +386,188 @@ function Accounts() {
       setSaving(true);
 
 
-      try {
+      await deleteAccount(
+        account.id
+      );
 
 
-        // ================================================
-        // VALIDASI KELAS
-        // ================================================
-
-        if (
-          formData.role ===
-            "anggota" &&
-          !formData.className
-        ) {
-
-          setError(
-            "Kelas anggota wajib dipilih."
-          );
-
-          setSaving(false);
-
-          return;
-
-        }
+      setSuccess(
+        `Akun ${
+          account.name ||
+          account.email
+        } berhasil dihapus.`
+      );
 
 
-        // ================================================
-        // EDIT AKUN
-        // ================================================
+      await loadAccounts();
 
-        if (editingAccount) {
+    } catch (error) {
 
-          await updateAccount(
-
-            editingAccount.id,
-
-            formData
-
-          );
+      console.error(
+        "Gagal menghapus akun:",
+        error
+      );
 
 
-          setSuccess(
-            "Data akun berhasil diperbarui."
-          );
+      setError(
+        error.message ||
+        "Gagal menghapus akun. Silakan coba lagi."
+      );
 
-        }
+    } finally {
 
+      setSaving(false);
 
-        // ================================================
-        // BUAT AKUN BARU
-        // ================================================
+    }
 
-        else {
-
-          await createAccount(
-            formData
-          );
+  };
 
 
-          setSuccess(
-            `Akun ${
-              formData.role ===
-              "admin"
-                ? "Admin"
-                : "Anggota"
-            } berhasil dibuat.`
-          );
+  // =========================================================
+  // SUBMIT FORM
+  // =========================================================
 
-        }
+  const handleSubmit = async (e) => {
+
+    e.preventDefault();
+
+    setError("");
+
+    setSuccess("");
+
+    setSaving(true);
 
 
-        setShowForm(false);
+    try {
 
-        setEditingAccount(null);
+      // ================================================
+      // VALIDASI KELAS
+      // ================================================
 
-        resetForm();
+      if (
+        formData.role ===
+          "anggota" &&
+        !formData.className
+      ) {
 
-        await loadAccounts();
-
-      } catch (error) {
-
-        console.error(
-          "Gagal menyimpan akun:",
-          error
+        setError(
+          "Kelas anggota wajib dipilih."
         );
-
-
-        if (
-          error.code ===
-          "auth/email-already-in-use"
-        ) {
-
-          setError(
-            "Email tersebut sudah digunakan."
-          );
-
-        }
-
-        else if (
-          error.code ===
-          "auth/invalid-email"
-        ) {
-
-          setError(
-            "Format email tidak valid."
-          );
-
-        }
-
-        else if (
-          error.code ===
-          "auth/weak-password"
-        ) {
-
-          setError(
-            "Password terlalu lemah. Gunakan minimal 6 karakter."
-          );
-
-        }
-
-        else {
-
-          setError(
-            error.message ||
-            "Gagal menyimpan akun. Silakan coba lagi."
-          );
-
-        }
-
-      } finally {
 
         setSaving(false);
 
+        return;
+
       }
 
-    };
+
+      // ================================================
+      // EDIT AKUN
+      // ================================================
+
+      if (editingAccount) {
+
+        await updateAccount(
+          editingAccount.id,
+          formData
+        );
+
+
+        setSuccess(
+          "Data akun berhasil diperbarui."
+        );
+
+      }
+
+
+      // ================================================
+      // BUAT AKUN BARU
+      // ================================================
+
+      else {
+
+        await createAccount(
+          formData
+        );
+
+
+        setSuccess(
+          `Akun ${
+            formData.role ===
+            "admin"
+              ? "Admin"
+              : "Anggota"
+          } berhasil dibuat.`
+        );
+
+      }
+
+
+      setShowForm(false);
+
+      setEditingAccount(null);
+
+      resetForm();
+
+      await loadAccounts();
+
+    } catch (error) {
+
+      console.error(
+        "Gagal menyimpan akun:",
+        error
+      );
+
+
+      if (
+        error.code ===
+        "auth/email-already-in-use"
+      ) {
+
+        setError(
+          "Email tersebut sudah digunakan."
+        );
+
+      }
+
+      else if (
+        error.code ===
+        "auth/invalid-email"
+      ) {
+
+        setError(
+          "Format email tidak valid."
+        );
+
+      }
+
+      else if (
+        error.code ===
+        "auth/weak-password"
+      ) {
+
+        setError(
+          "Password terlalu lemah. Gunakan minimal 6 karakter."
+        );
+
+      }
+
+      else {
+
+        setError(
+          error.message ||
+          "Gagal menyimpan akun. Silakan coba lagi."
+        );
+
+      }
+
+    } finally {
+
+      setSaving(false);
+
+    }
+
+  };
 
 
   // =========================================================
@@ -551,7 +695,9 @@ function Accounts() {
                 handleCloseForm
               }
             >
+
               ×
+
             </button>
 
           </div>
@@ -581,9 +727,7 @@ function Accounts() {
             <div className="admin-form-grid">
 
 
-              {/* ==========================================
-                  NAMA
-              ========================================== */}
+              {/* NAMA */}
 
               <div className="admin-form-group">
 
@@ -608,9 +752,7 @@ function Accounts() {
               </div>
 
 
-              {/* ==========================================
-                  EMAIL
-              ========================================== */}
+              {/* EMAIL */}
 
               <div className="admin-form-group">
 
@@ -635,9 +777,7 @@ function Accounts() {
               </div>
 
 
-              {/* ==========================================
-                  ROLE
-              ========================================== */}
+              {/* ROLE */}
 
               <div className="admin-form-group">
 
@@ -669,9 +809,7 @@ function Accounts() {
               </div>
 
 
-              {/* ==========================================
-                  KELAS
-              ========================================== */}
+              {/* KELAS */}
 
               {formData.role ===
                 "anggota" && (
@@ -717,10 +855,7 @@ function Accounts() {
               )}
 
 
-              {/* ==========================================
-                  PASSWORD
-                  HANYA AKUN BARU
-              ========================================== */}
+              {/* PASSWORD */}
 
               {!editingAccount && (
 
@@ -749,13 +884,10 @@ function Accounts() {
 
               )}
 
-
             </div>
 
 
-            {/* ==========================================
-                FORM ACTION
-            ========================================== */}
+            {/* FORM ACTION */}
 
             <div className="admin-form-actions">
 
@@ -769,7 +901,9 @@ function Accounts() {
                   saving
                 }
               >
+
                 Batal
+
               </button>
 
 
@@ -782,19 +916,14 @@ function Accounts() {
               >
 
                 {saving
-
                   ? "Menyimpan..."
-
                   : editingAccount
-
                   ? "Simpan Perubahan"
-
                   : "Simpan Akun"}
 
               </button>
 
             </div>
-
 
           </form>
 
@@ -804,13 +933,15 @@ function Accounts() {
 
 
       {/* ===================================================
-          TABLE
+          TABLE CARD
       =================================================== */}
 
       <div className="admin-table-card">
 
 
-        {/* TABLE HEADER */}
+        {/* =================================================
+            TABLE HEADER
+        ================================================= */}
 
         <div className="admin-table-header">
 
@@ -821,16 +952,62 @@ function Accounts() {
             </h3>
 
             <p>
-              {accounts.length} akun
-              terdaftar
+
+              {filteredAccounts.length} akun
+              {search
+                ? " ditemukan"
+                : " terdaftar"}
+
             </p>
+
+          </div>
+
+
+          {/* SEARCH */}
+
+          <div className="admin-search-box">
+
+            <span className="admin-search-icon">
+              🔎
+            </span>
+
+            <input
+              type="text"
+              placeholder="Cari nama akun..."
+              value={search}
+              onChange={(e) =>
+                setSearch(
+                  e.target.value
+                )
+              }
+            />
+
+
+            {search && (
+
+              <button
+                type="button"
+                className="admin-search-clear"
+                onClick={() =>
+                  setSearch("")
+                }
+                aria-label="Hapus pencarian"
+              >
+
+                ×
+
+              </button>
+
+            )}
 
           </div>
 
         </div>
 
 
-        {/* LOADING */}
+        {/* =================================================
+            LOADING
+        ================================================= */}
 
         {loading ? (
 
@@ -840,11 +1017,13 @@ function Accounts() {
 
           </div>
 
-        ) : accounts.length ===
+        ) : filteredAccounts.length ===
           0 ? (
 
 
-          /* EMPTY */
+          /* ===============================================
+             EMPTY
+          =============================================== */
 
           <div className="admin-empty">
 
@@ -853,12 +1032,19 @@ function Accounts() {
             </div>
 
             <h4>
-              Belum ada akun
+
+              {search
+                ? "Akun tidak ditemukan"
+                : "Belum ada akun"}
+
             </h4>
 
             <p>
-              Belum ada data akun
-              yang tersimpan.
+
+              {search
+                ? `Tidak ada akun dengan nama "${search}".`
+                : "Belum ada data akun yang tersimpan."}
+
             </p>
 
           </div>
@@ -867,7 +1053,9 @@ function Accounts() {
         ) : (
 
 
-          /* TABLE */
+          /* ===============================================
+             TABLE
+          =============================================== */
 
           <div className="admin-table-wrapper">
 
@@ -908,7 +1096,7 @@ function Accounts() {
 
               <tbody>
 
-                {accounts.map(
+                {currentAccounts.map(
                   (account) => (
 
                     <tr
@@ -970,7 +1158,9 @@ function Accounts() {
                                 "#8a909d",
                             }}
                           >
+
                             -
+
                           </span>
 
                         )}
@@ -1030,7 +1220,9 @@ function Accounts() {
                               )
                             }
                           >
+
                             Edit
+
                           </button>
 
 
@@ -1046,7 +1238,9 @@ function Accounts() {
                               saving
                             }
                           >
+
                             Hapus
+
                           </button>
 
 
@@ -1063,6 +1257,109 @@ function Accounts() {
               </tbody>
 
             </table>
+
+          </div>
+
+        )}
+
+
+        {/* =================================================
+            PAGINATION
+        ================================================= */}
+
+        {!loading &&
+          filteredAccounts.length >
+            0 && (
+
+          <div className="admin-pagination">
+
+
+            {/* INFO */}
+
+            <div className="admin-pagination-info">
+
+              Menampilkan{" "}
+
+              <strong>
+                {startIndex + 1}
+              </strong>
+
+              {" - "}
+
+              <strong>
+                {Math.min(
+                  endIndex,
+                  filteredAccounts.length
+                )}
+              </strong>
+
+              {" dari "}
+
+              <strong>
+                {filteredAccounts.length}
+              </strong>
+
+              {" akun"}
+
+            </div>
+
+
+            {/* BUTTON */}
+
+            <div className="admin-pagination-buttons">
+
+              <button
+                type="button"
+                className="admin-pagination-button"
+                onClick={
+                  handlePreviousPage
+                }
+                disabled={
+                  currentPage === 1
+                }
+              >
+
+                ← Sebelumnya
+
+              </button>
+
+
+              {/* NOMOR HALAMAN */}
+
+              <div className="admin-page-number">
+
+                Halaman{" "}
+
+                <strong>
+                  {currentPage}
+                </strong>
+
+                {" dari "}
+
+                <strong>
+                  {totalPages}
+                </strong>
+
+              </div>
+
+
+              <button
+                type="button"
+                className="admin-pagination-button"
+                onClick={
+                  handleNextPage
+                }
+                disabled={
+                  currentPage ===
+                  totalPages
+                }
+              >
+
+                Berikutnya →
+
+              </button>
+
+            </div>
 
           </div>
 

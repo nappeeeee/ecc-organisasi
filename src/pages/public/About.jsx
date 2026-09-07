@@ -206,13 +206,6 @@ function About() {
             <h2>
               {vision}
             </h2>
-
-            <p>
-              Visi menjadi landasan utama dalam
-              menentukan arah dan tujuan
-              organisasi.
-            </p>
-
           </div>
 
 

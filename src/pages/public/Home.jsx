@@ -406,33 +406,7 @@ function Home() {
             </span>
 
           </div>
-
-
-          <div className="stat-item">
-
-            <strong>
-              {divisionCount}
-            </strong>
-
-            <span>
-              Divisi
-            </span>
-
-          </div>
-
-
-          <div className="stat-item">
-
-            <strong>
-              2026
-            </strong>
-
-            <span>
-              Periode
-            </span>
-
-          </div>
-
+         
         </div>
 
       </section>

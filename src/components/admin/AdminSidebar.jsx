@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/config";
+import eccLogo from "../../img/ecc.png";
 
 function AdminSidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
@@ -23,22 +24,28 @@ function AdminSidebar({ isOpen, onClose }) {
   return (
     <aside className={`admin-sidebar ${isOpen ? "open" : ""}`}>
       <div className="admin-logo">
-        <div className="admin-logo-box">ORG</div>
-
-        <div>
-          <h2>Organisasi</h2>
-          <span>Admin Panel</span>
-        </div>
-
-        <button
-          type="button"
-          className="admin-sidebar-close"
-          onClick={onClose}
-          aria-label="Tutup menu"
-        >
-          ×
-        </button>
+      <div className="admin-logo-box">
+        <img
+          src={eccLogo}
+          alt="ECC Logo"
+          className="admin-logo-image"
+        />
       </div>
+
+      <div>
+        <h2>Organisasi</h2>
+        <span>Admin Panel</span>
+      </div>
+
+      <button
+        type="button"
+        className="admin-sidebar-close"
+        onClick={onClose}
+        aria-label="Tutup menu"
+      >
+        ×
+      </button>
+    </div>
 
       <nav className="admin-nav">
         <p className="admin-nav-title">MENU UTAMA</p>

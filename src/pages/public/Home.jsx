@@ -445,41 +445,30 @@ function Home() {
 
         <div className="hero-container">
 
-
           <div className="hero-content">
 
             <span className="hero-badge">
               ENGLISH CONVERSATION CLUB
             </span>
 
-
             <h1>
-
-              Bersama Membangun
-
-              <span>
-                {" "}
-                Generasi Berprestasi
-              </span>
-
+              Welcome to English Conversation Club!{" "}
+              <span>✨</span>
             </h1>
 
-
             <p>
-
-              Selamat datang di website resmi{" "}
-
-              <strong>
-                {organizationName}
-              </strong>
-
-              . Temukan informasi terbaru,
-              struktur organisasi, kegiatan,
-              dan berbagai informasi lainnya
-              di sini.
-
+              ECC is a place where English meets creativity, confidence,
+              friendship, and new experiences. As an English extracurricular
+              at SMA Negeri 5 Purwokerto, ECC brings students together to
+              explore English in a fun, active, and meaningful way.
             </p>
 
+            <p>
+              Here, English is not limited to textbooks and classrooms.
+              We learn through conversations, discussions, games, debates,
+              creative projects, and activities that encourage members to
+              think, speak, collaborate, and express themselves.
+            </p>
 
             <div className="hero-buttons">
 
@@ -489,7 +478,6 @@ function Home() {
               >
                 Lihat Struktur
               </Link>
-
 
               <Link
                 to="/news"
@@ -501,7 +489,6 @@ function Home() {
             </div>
 
           </div>
-
 
           <div className="hero-visual">
 
@@ -524,13 +511,11 @@ function Home() {
 
             </div>
 
-
             <div className="hero-floating-card">
 
               <div className="hero-floating-icon">
                 👥
               </div>
-
 
               <div>
 

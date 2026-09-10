@@ -22,33 +22,41 @@ const CLOUDINARY_CLOUD_NAME =
 const CLOUDINARY_UPLOAD_PRESET =
   import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
+
 // =========================================================
 // COLLECTION
 // =========================================================
 
-const sectionsCollection = collection(
-  db,
-  "organization_sections"
-);
+const sectionsCollection =
+  collection(
+    db,
+    "organization_sections"
+  );
 
-const membersCollection = collection(
-  db,
-  "organization_members"
-);
 
-const usersCollection = collection(
-  db,
-  "users"
-);
+const membersCollection =
+  collection(
+    db,
+    "organization_members"
+  );
+
 
 // =========================================================
 // UPLOAD FOTO ANGGOTA
 // =========================================================
 
-const validateMemberPhoto = (file) => {
+const validateMemberPhoto = (
+  file
+) => {
+
   if (!file) {
-    throw new Error("File foto tidak ditemukan.");
+
+    throw new Error(
+      "File foto tidak ditemukan."
+    );
+
   }
+
 
   const allowedTypes = [
     "image/jpeg",
@@ -57,505 +65,462 @@ const validateMemberPhoto = (file) => {
     "image/webp",
   ];
 
-  if (!allowedTypes.includes(file.type)) {
+
+  if (
+    !allowedTypes.includes(
+      file.type
+    )
+  ) {
+
     throw new Error(
       "Format foto harus JPG, PNG, atau WEBP."
     );
+
   }
 
-  const maxSize = 5 * 1024 * 1024;
 
-  if (file.size > maxSize) {
+  const maxSize =
+    5 * 1024 * 1024;
+
+
+  if (
+    file.size >
+    maxSize
+  ) {
+
     throw new Error(
       "Ukuran foto maksimal 5 MB."
     );
+
   }
 
+
   if (!CLOUDINARY_CLOUD_NAME) {
+
     throw new Error(
       "Cloudinary Cloud Name belum dikonfigurasi."
     );
+
   }
 
+
   if (!CLOUDINARY_UPLOAD_PRESET) {
+
     throw new Error(
       "Cloudinary Upload Preset belum dikonfigurasi."
     );
+
   }
+
 };
 
-export const uploadMemberPhoto = async (file) => {
-  validateMemberPhoto(file);
 
-  const formData = new FormData();
+// =========================================================
+// UPLOAD FOTO ANGGOTA
+// =========================================================
 
-  formData.append("file", file);
+export const uploadMemberPhoto =
+  async (file) => {
 
-  formData.append(
-    "upload_preset",
-    CLOUDINARY_UPLOAD_PRESET
-  );
+    validateMemberPhoto(file);
 
-  formData.append(
-    "folder",
-    "website-organisasi/members"
-  );
 
-  const uploadURL =
-    `https://api.cloudinary.com/v1_1/` +
-    `${CLOUDINARY_CLOUD_NAME}/image/upload`;
+    const formData =
+      new FormData();
 
-  const response = await fetch(
-    uploadURL,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    console.error(
-      "Cloudinary member photo error:",
-      result
+    formData.append(
+      "file",
+      file
     );
 
-    throw new Error(
-      result?.error?.message ||
+
+    formData.append(
+      "upload_preset",
+      CLOUDINARY_UPLOAD_PRESET
+    );
+
+
+    formData.append(
+      "folder",
+      "website-organisasi/members"
+    );
+
+
+    const uploadURL =
+      `https://api.cloudinary.com/v1_1/` +
+      `${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+
+    const response =
+      await fetch(
+        uploadURL,
+        {
+          method:
+            "POST",
+
+          body:
+            formData,
+        }
+      );
+
+
+    const result =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      console.error(
+        "Cloudinary member photo error:",
+        result
+      );
+
+
+      throw new Error(
+        result?.error?.message ||
         "Gagal mengupload foto anggota."
-    );
-  }
+      );
 
-  return {
-    url: result.secure_url,
-    publicId: result.public_id,
+    }
+
+
+    return {
+
+      url:
+        result.secure_url,
+
+      publicId:
+        result.public_id,
+
+    };
+
   };
-};
+
 
 // =========================================================
 // BAGIAN / DIVISI
 // =========================================================
 
-export const getSections = async () => {
-  const sectionQuery = query(
-    sectionsCollection,
-    orderBy("order", "asc")
-  );
+export const getSections =
+  async () => {
 
-  const snapshot =
-    await getDocs(sectionQuery);
-
-  return snapshot.docs.map(
-    (document) => ({
-      id: document.id,
-      ...document.data(),
-    })
-  );
-};
-
-export const getSectionById = async (id) => {
-  const sectionRef = doc(
-    db,
-    "organization_sections",
-    id
-  );
-
-  const snapshot =
-    await getDoc(sectionRef);
-
-  if (!snapshot.exists()) {
-    return null;
-  }
-
-  return {
-    id: snapshot.id,
-    ...snapshot.data(),
-  };
-};
-
-export const createSection = async (data) => {
-  const sectionData = {
-    name: data.name.trim(),
-    order: Number(data.order) || 1,
-    active: data.active ?? true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  const document =
-    await addDoc(
-      sectionsCollection,
-      sectionData
-    );
-
-  return {
-    id: document.id,
-    ...sectionData,
-  };
-};
-
-export const updateSection = async (
-  id,
-  data
-) => {
-  const sectionRef = doc(
-    db,
-    "organization_sections",
-    id
-  );
-
-  await updateDoc(
-    sectionRef,
-    {
-      name: data.name.trim(),
-      order: Number(data.order) || 1,
-      active: data.active ?? true,
-      updatedAt: new Date(),
-    }
-  );
-};
-
-export const deleteSection = async (id) => {
-  const sectionRef = doc(
-    db,
-    "organization_sections",
-    id
-  );
-
-  await deleteDoc(sectionRef);
-};
-
-// =========================================================
-// ANGGOTA
-// =========================================================
-//
-// SUMBER UTAMA ANGGOTA:
-// users dengan role === "anggota"
-//
-// organization_members:
-// hanya digunakan untuk mengambil data struktur,
-// seperti:
-// - position
-// - sectionId
-// - order
-// - active
-//
-// Dengan cara ini:
-// akun anggota dibuat dari Kelola Akun
-//       ↓
-// otomatis menjadi anggota
-//
-// =========================================================
-
-export const getMembers = async () => {
-
-  // =======================================================
-  // 1. AMBIL USERS
-  // =======================================================
-
-  const usersSnapshot =
-    await getDocs(
-      usersCollection
-    );
-
-  const users =
-    usersSnapshot.docs
-      .map(
-        (document) => ({
-          id: document.id,
-          ...document.data(),
-        })
-      )
-      .filter(
-        (user) =>
-          user.role === "anggota"
+    const sectionQuery =
+      query(
+        sectionsCollection,
+        orderBy(
+          "order",
+          "asc"
+        )
       );
 
 
-  // =======================================================
-  // 2. AMBIL ORGANIZATION MEMBERS
-  // =======================================================
+    const snapshot =
+      await getDocs(
+        sectionQuery
+      );
 
-  const memberQuery =
-    query(
-      membersCollection,
-      orderBy(
-        "order",
-        "asc"
-      )
-    );
 
-  const membersSnapshot =
-    await getDocs(
-      memberQuery
-    );
-
-  const organizationMembers =
-    membersSnapshot.docs.map(
+    return snapshot.docs.map(
       (document) => ({
-        id: document.id,
+
+        id:
+          document.id,
+
         ...document.data(),
+
       })
     );
 
+  };
 
-  // =======================================================
-  // 3. BUAT MAP ORGANIZATION MEMBER BERDASARKAN UID
-  // =======================================================
 
-  const organizationMemberMap =
-    new Map();
+// =========================================================
+// GET SECTION BY ID
+// =========================================================
 
-  organizationMembers.forEach(
-    (member) => {
+export const getSectionById =
+  async (id) => {
 
-      if (member.uid) {
+    const sectionRef =
+      doc(
+        db,
+        "organization_sections",
+        id
+      );
 
-        organizationMemberMap.set(
-          member.uid,
-          member
+
+    const snapshot =
+      await getDoc(
+        sectionRef
+      );
+
+
+    if (!snapshot.exists()) {
+
+      return null;
+
+    }
+
+
+    return {
+
+      id:
+        snapshot.id,
+
+      ...snapshot.data(),
+
+    };
+
+  };
+
+
+// =========================================================
+// CREATE SECTION
+// =========================================================
+
+export const createSection =
+  async (data) => {
+
+    const sectionData = {
+
+      name:
+        data.name.trim(),
+
+      order:
+        Number(data.order) ||
+        1,
+
+      active:
+        data.active ??
+        true,
+
+      createdAt:
+        new Date(),
+
+      updatedAt:
+        new Date(),
+
+    };
+
+
+    const document =
+      await addDoc(
+        sectionsCollection,
+        sectionData
+      );
+
+
+    return {
+
+      id:
+        document.id,
+
+      ...sectionData,
+
+    };
+
+  };
+
+
+// =========================================================
+// UPDATE SECTION
+// =========================================================
+
+export const updateSection =
+  async (
+    id,
+    data
+  ) => {
+
+    const sectionRef =
+      doc(
+        db,
+        "organization_sections",
+        id
+      );
+
+
+    await updateDoc(
+      sectionRef,
+      {
+
+        name:
+          data.name.trim(),
+
+        order:
+          Number(data.order) ||
+          1,
+
+        active:
+          data.active ??
+          true,
+
+        updatedAt:
+          new Date(),
+
+      }
+    );
+
+  };
+
+
+// =========================================================
+// DELETE SECTION
+// =========================================================
+
+export const deleteSection =
+  async (id) => {
+
+    const sectionRef =
+      doc(
+        db,
+        "organization_sections",
+        id
+      );
+
+
+    await deleteDoc(
+      sectionRef
+    );
+
+  };
+
+
+// =========================================================
+// GET MEMBERS PUBLIC
+// =========================================================
+//
+// PENTING:
+//
+// Fungsi ini dipakai oleh:
+// - Home
+// - Organization
+//
+// JANGAN membaca collection users di sini.
+//
+// Data anggota public diambil melalui:
+// /api/public-member-photos
+//
+// Karena API menggunakan Firebase Admin,
+// pengunjung yang belum login tetap bisa
+// melihat anggota.
+//
+// =========================================================
+
+export const getMembers =
+  async () => {
+
+    try {
+
+      const response =
+        await fetch(
+          "/api/public-member-photos"
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Gagal mengambil data anggota."
         );
 
       }
 
-    }
-  );
+
+      const result =
+        await response.json();
 
 
-  // =======================================================
-  // 4. GABUNG USERS + ORGANIZATION MEMBERS
-  // =======================================================
+      if (
+        !result.success
+      ) {
 
-  const combinedMembers =
-    users.map(
-      (user) => {
-
-        const uid =
-          user.uid ||
-          user.id;
-
-        const organizationMember =
-          organizationMemberMap.get(
-            uid
-          );
-
-
-        return {
-
-          // ===============================================
-          // DATA USER
-          // ===============================================
-
-          id:
-            user.id,
-
-          uid,
-
-          name:
-            user.name ||
-            user.displayName ||
-            "Belum diisi",
-
-          email:
-            user.email ||
-            "",
-
-          className:
-            user.className ||
-            "",
-
-          role:
-            user.role ||
-            "anggota",
-
-          // ===============================================
-          // FOTO
-          //
-          // FOTO UTAMA SEKARANG DARI USERS
-          // ===============================================
-
-          photo:
-            user.photo ||
-            "",
-
-          photoPublicId:
-            user.photoPublicId ||
-            "",
-
-          // ===============================================
-          // DATA STRUKTUR
-          //
-          // Kalau belum ada di organization_members,
-          // gunakan nilai default.
-          // ===============================================
-
-          position:
-            organizationMember?.position ||
-            organizationMember?.jabatan ||
-            "Anggota",
-
-          jabatan:
-            organizationMember?.jabatan ||
-            organizationMember?.position ||
-            "Anggota",
-
-          sectionId:
-            organizationMember?.sectionId ||
-            "",
-
-          order:
-            organizationMember?.order ??
-            9999,
-
-          active:
-            organizationMember?.active ??
-            true,
-
-          // ===============================================
-          // ID ORGANIZATION MEMBER
-          // berguna kalau nanti diperlukan
-          // ===============================================
-
-          organizationMemberId:
-            organizationMember?.id ||
-            "",
-
-        };
+        throw new Error(
+          result.message ||
+          "Gagal mengambil data anggota."
+        );
 
       }
-    );
 
 
-  // =======================================================
-  // 5. URUTKAN
-  // =======================================================
+      return (
+        result.members ||
+        []
+      );
 
-  combinedMembers.sort(
-    (a, b) =>
-      (a.order ?? 9999) -
-      (b.order ?? 9999)
-  );
+    } catch (error) {
+
+      console.error(
+        "Gagal mengambil data anggota public:",
+        error
+      );
 
 
-  // =======================================================
-  // 6. RETURN
-  // =======================================================
+      throw error;
 
-  return combinedMembers;
-};
+    }
 
-export const getMemberById = async (
-  id
-) => {
-
-  const memberRef = doc(
-    db,
-    "organization_members",
-    id
-  );
-
-  const snapshot =
-    await getDoc(memberRef);
-
-  if (!snapshot.exists()) {
-    return null;
-  }
-
-  return {
-    id: snapshot.id,
-    ...snapshot.data(),
   };
-};
+
+
+// =========================================================
+// GET MEMBER BY ID
+// =========================================================
+
+export const getMemberById =
+  async (id) => {
+
+    const memberRef =
+      doc(
+        db,
+        "organization_members",
+        id
+      );
+
+
+    const snapshot =
+      await getDoc(
+        memberRef
+      );
+
+
+    if (!snapshot.exists()) {
+
+      return null;
+
+    }
+
+
+    return {
+
+      id:
+        snapshot.id,
+
+      ...snapshot.data(),
+
+    };
+
+  };
+
 
 // =========================================================
 // CREATE ANGGOTA
 // =========================================================
 //
-// Catatan:
-// Fungsi ini tetap dipertahankan untuk kebutuhan
-// Struktur Organisasi.
+// Tetap dipertahankan untuk kebutuhan
+// struktur organisasi.
 //
-// Tetapi akun anggota seharusnya dibuat melalui
+// Akun anggota utama dibuat melalui
 // Kelola Akun.
+//
 // =========================================================
 
-export const createMember = async (
-  data
-) => {
+export const createMember =
+  async (data) => {
 
-  const memberData = {
-    uid:
-      data.uid ||
-      "",
+    const memberData = {
 
-    name:
-      data.name.trim(),
-
-    email:
-      data.email ||
-      "",
-
-    position:
-      data.position.trim(),
-
-    sectionId:
-      data.sectionId,
-
-    photo:
-      data.photo ||
-      "",
-
-    photoPublicId:
-      data.photoPublicId ||
-      "",
-
-    order:
-      Number(data.order) ||
-      1,
-
-    active:
-      data.active ??
-      true,
-
-    createdAt:
-      new Date(),
-
-    updatedAt:
-      new Date(),
-  };
-
-  const document =
-    await addDoc(
-      membersCollection,
-      memberData
-    );
-
-  return {
-    id: document.id,
-    ...memberData,
-  };
-};
-
-// =========================================================
-// UPDATE ANGGOTA
-// =========================================================
-
-export const updateMember = async (
-  id,
-  data
-) => {
-
-  const memberRef =
-    doc(
-      db,
-      "organization_members",
-      id
-    );
-
-  await updateDoc(
-    memberRef,
-    {
       uid:
         data.uid ||
         "",
@@ -589,26 +554,115 @@ export const updateMember = async (
         data.active ??
         true,
 
+      createdAt:
+        new Date(),
+
       updatedAt:
         new Date(),
-    }
-  );
-};
+
+    };
+
+
+    const document =
+      await addDoc(
+        membersCollection,
+        memberData
+      );
+
+
+    return {
+
+      id:
+        document.id,
+
+      ...memberData,
+
+    };
+
+  };
+
+
+// =========================================================
+// UPDATE ANGGOTA
+// =========================================================
+
+export const updateMember =
+  async (
+    id,
+    data
+  ) => {
+
+    const memberRef =
+      doc(
+        db,
+        "organization_members",
+        id
+      );
+
+
+    await updateDoc(
+      memberRef,
+      {
+
+        uid:
+          data.uid ||
+          "",
+
+        name:
+          data.name.trim(),
+
+        email:
+          data.email ||
+          "",
+
+        position:
+          data.position.trim(),
+
+        sectionId:
+          data.sectionId,
+
+        photo:
+          data.photo ||
+          "",
+
+        photoPublicId:
+          data.photoPublicId ||
+          "",
+
+        order:
+          Number(data.order) ||
+          1,
+
+        active:
+          data.active ??
+          true,
+
+        updatedAt:
+          new Date(),
+
+      }
+    );
+
+  };
+
 
 // =========================================================
 // DELETE ANGGOTA
 // =========================================================
 
-export const deleteMember = async (
-  id
-) => {
+export const deleteMember =
+  async (id) => {
 
-  const memberRef =
-    doc(
-      db,
-      "organization_members",
-      id
+    const memberRef =
+      doc(
+        db,
+        "organization_members",
+        id
+      );
+
+
+    await deleteDoc(
+      memberRef
     );
 
-  await deleteDoc(memberRef);
-};
+  };

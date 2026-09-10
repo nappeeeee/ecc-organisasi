@@ -8,9 +8,9 @@ import {
   getFirestore,
 } from "firebase-admin/firestore";
 
-// ==========================================
+// =========================================================
 // FIREBASE ADMIN
-// ==========================================
+// =========================================================
 
 const privateKey =
   process.env.FIREBASE_PRIVATE_KEY?.replace(
@@ -37,121 +37,232 @@ const adminApp =
 const adminDb =
   getFirestore(adminApp);
 
-// ==========================================
-// API HANDLER
-// ==========================================
+
+// =========================================================
+// API
+// =========================================================
 
 export default async function handler(
   req,
   res
 ) {
+
   try {
-    // Hanya izinkan GET
+
+    // =====================================================
+    // METHOD
+    // =====================================================
+
     if (req.method !== "GET") {
+
       return res.status(405).json({
         success: false,
         message:
           "Method tidak diperbolehkan.",
       });
+
     }
 
-    // ======================================
-    // AMBIL DATA ANGGOTA ORGANISASI
-    // ======================================
 
-    const membersSnapshot =
+    // =====================================================
+    // AMBIL SEMUA USERS
+    // =====================================================
+
+    const usersSnapshot =
+      await adminDb
+        .collection("users")
+        .get();
+
+
+    // =====================================================
+    // HANYA AKUN ANGGOTA
+    // =====================================================
+
+    const users =
+      usersSnapshot.docs
+        .map(
+          (document) => ({
+            id: document.id,
+            ...document.data(),
+          })
+        )
+        .filter(
+          (user) =>
+            user.role ===
+            "anggota"
+        );
+
+
+    // =====================================================
+    // AMBIL ORGANIZATION MEMBERS
+    //
+    // Digunakan untuk:
+    // - jabatan
+    // - section
+    // - urutan
+    // - status active
+    // =====================================================
+
+    const organizationSnapshot =
       await adminDb
         .collection(
           "organization_members"
         )
-        .where(
-          "active",
-          "==",
-          true
-        )
         .get();
 
-    // ======================================
-    // AMBIL FOTO DARI users/{uid}
-    // ======================================
 
-    const members =
-      membersSnapshot.docs;
-
-    const photoResults =
-      await Promise.all(
-        members.map(
-          async (memberDoc) => {
-            const memberData =
-              memberDoc.data();
-
-            const uid =
-              memberData.uid;
-
-            // Tidak punya UID
-            if (!uid) {
-              return {
-                uid: "",
-                photo: "",
-              };
-            }
-
-            const userDoc =
-              await adminDb
-                .collection("users")
-                .doc(uid)
-                .get();
-
-            if (!userDoc.exists) {
-              return {
-                uid,
-                photo: "",
-              };
-            }
-
-            const userData =
-              userDoc.data();
-
-            return {
-              uid,
-              photo:
-                userData.photo ||
-                "",
-            };
-          }
-        )
+    const organizationMembers =
+      organizationSnapshot.docs.map(
+        (document) => ({
+          id: document.id,
+          ...document.data(),
+        })
       );
 
-    // ======================================
-    // UBAH MENJADI OBJECT
-    // uid -> photo
-    // ======================================
 
-    const photos = {};
+    // =====================================================
+    // MAP ORGANIZATION MEMBER BERDASARKAN UID
+    // =====================================================
 
-    photoResults.forEach(
-      (item) => {
-        if (item.uid) {
-          photos[item.uid] =
-            item.photo || "";
+    const organizationMemberMap =
+      new Map();
+
+
+    organizationMembers.forEach(
+      (member) => {
+
+        if (member.uid) {
+
+          organizationMemberMap.set(
+            member.uid,
+            member
+          );
+
         }
+
       }
     );
 
+
+    // =====================================================
+    // GABUNG DATA PUBLIC
+    // =====================================================
+
+    const members =
+      users.map(
+        (user) => {
+
+          const uid =
+            user.uid ||
+            user.id;
+
+
+          const organizationMember =
+            organizationMemberMap.get(
+              uid
+            );
+
+
+          return {
+
+            // =============================================
+            // IDENTITAS YANG AMAN UNTUK PUBLIC
+            // =============================================
+
+            uid,
+
+            name:
+              user.name ||
+              user.displayName ||
+              "Belum diisi",
+
+            photo:
+              user.photo ||
+              "",
+
+            photoPublicId:
+              user.photoPublicId ||
+              "",
+
+            className:
+              user.className ||
+              "",
+
+
+            // =============================================
+            // DATA STRUKTUR ORGANISASI
+            // =============================================
+
+            position:
+              organizationMember?.position ||
+              organizationMember?.jabatan ||
+              "Anggota",
+
+            jabatan:
+              organizationMember?.jabatan ||
+              organizationMember?.position ||
+              "Anggota",
+
+            sectionId:
+              organizationMember?.sectionId ||
+              "",
+
+            order:
+              organizationMember?.order ??
+              9999,
+
+            active:
+              organizationMember?.active ??
+              true,
+
+          };
+
+        }
+      );
+
+
+    // =====================================================
+    // URUTKAN BERDASARKAN ORDER
+    // =====================================================
+
+    members.sort(
+      (a, b) =>
+        (a.order ?? 9999) -
+        (b.order ?? 9999)
+    );
+
+
+    // =====================================================
+    // RESPONSE
+    // =====================================================
+
     return res.status(200).json({
-      success: true,
-      photos,
+
+      success:
+        true,
+
+      members,
+
     });
+
   } catch (error) {
+
     console.error(
-      "Public member photos API error:",
+      "Public member API error:",
       error
     );
 
+
     return res.status(500).json({
-      success: false,
+
+      success:
+        false,
+
       message:
-        "Gagal mengambil foto anggota.",
+        "Gagal mengambil data anggota.",
+
     });
+
   }
+
 }

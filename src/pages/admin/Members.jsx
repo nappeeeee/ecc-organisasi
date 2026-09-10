@@ -29,6 +29,27 @@ function Members() {
 
 
   // =========================================================
+  // PAGINATION
+  // =========================================================
+
+  const [currentPage, setCurrentPage] =
+    useState(1);
+
+  const membersPerPage = 10;
+
+
+  // =========================================================
+  // SORTING
+  // =========================================================
+
+  const [sortConfig, setSortConfig] =
+    useState({
+      key: "name",
+      direction: "asc",
+    });
+
+
+  // =========================================================
   // LOAD MEMBERS
   // =========================================================
 
@@ -68,111 +89,14 @@ function Members() {
 
 
   // =========================================================
-  // FILTER SEARCH
+  // RESET PAGE SAAT SEARCH BERUBAH
   // =========================================================
 
-  const filteredMembers =
-    useMemo(() => {
+  useEffect(() => {
 
-      const keyword =
-        search
-          .trim()
-          .toLowerCase();
+    setCurrentPage(1);
 
-
-      if (!keyword) {
-
-        return members;
-
-      }
-
-
-      return members.filter(
-        (member) => {
-
-          const name =
-            member.name
-              ?.toLowerCase() ||
-            "";
-
-          const position =
-            member.position
-              ?.toLowerCase() ||
-            "";
-
-          const jabatan =
-            member.jabatan
-              ?.toLowerCase() ||
-            "";
-
-          const email =
-            member.email
-              ?.toLowerCase() ||
-            "";
-
-
-          return (
-
-            name.includes(
-              keyword
-            ) ||
-
-            position.includes(
-              keyword
-            ) ||
-
-            jabatan.includes(
-              keyword
-            ) ||
-
-            email.includes(
-              keyword
-            )
-
-          );
-
-        }
-      );
-
-    }, [
-      members,
-      search,
-    ]);
-
-
-  // =========================================================
-  // STATISTICS
-  // =========================================================
-
-  const totalMembers =
-    members.length;
-
-
-  const totalHadir =
-    members.reduce(
-      (total, member) =>
-        total +
-        (member.hadir || 0),
-      0
-    );
-
-
-  const totalIzin =
-    members.reduce(
-      (total, member) =>
-        total +
-        (member.izin || 0),
-      0
-    );
-
-
-  const totalSakit =
-    members.reduce(
-      (total, member) =>
-        total +
-        (member.sakit || 0),
-      0
-    );
+  }, [search]);
 
 
   // =========================================================
@@ -225,6 +149,343 @@ function Members() {
 
 
   // =========================================================
+  // FILTER SEARCH
+  // =========================================================
+
+  const filteredMembers =
+    useMemo(() => {
+
+      const keyword =
+        search
+          .trim()
+          .toLowerCase();
+
+
+      if (!keyword) {
+
+        return members;
+
+      }
+
+
+      return members.filter(
+        (member) => {
+
+          const name =
+            getMemberName(member)
+              .toLowerCase();
+
+          const position =
+            member.position
+              ?.toLowerCase() ||
+            "";
+
+          const jabatan =
+            member.jabatan
+              ?.toLowerCase() ||
+            "";
+
+          const email =
+            member.email
+              ?.toLowerCase() ||
+            "";
+
+
+          return (
+
+            name.includes(
+              keyword
+            ) ||
+
+            position.includes(
+              keyword
+            ) ||
+
+            jabatan.includes(
+              keyword
+            ) ||
+
+            email.includes(
+              keyword
+            )
+
+          );
+
+        }
+      );
+
+    }, [
+      members,
+      search,
+    ]);
+
+
+  // =========================================================
+  // SORT MEMBERS
+  // =========================================================
+
+  const sortedMembers =
+    useMemo(() => {
+
+      const sorted =
+        [...filteredMembers];
+
+
+      sorted.sort(
+        (a, b) => {
+
+          // ===============================================
+          // SORT BERDASARKAN NAMA
+          // ===============================================
+
+          if (
+            sortConfig.key ===
+            "name"
+          ) {
+
+            const nameA =
+              getMemberName(a)
+                .toLowerCase();
+
+            const nameB =
+              getMemberName(b)
+                .toLowerCase();
+
+
+            if (
+              sortConfig.direction ===
+              "asc"
+            ) {
+
+              return nameA.localeCompare(
+                nameB,
+                "id",
+                {
+                  sensitivity:
+                    "base",
+                }
+              );
+
+            }
+
+
+            return nameB.localeCompare(
+              nameA,
+              "id",
+              {
+                sensitivity:
+                  "base",
+              }
+            );
+
+          }
+
+
+          // ===============================================
+          // SORT DATA ANGKA
+          // ===============================================
+
+          const valueA =
+            Number(
+              a[
+                sortConfig.key
+              ] || 0
+            );
+
+          const valueB =
+            Number(
+              b[
+                sortConfig.key
+              ] || 0
+            );
+
+
+          if (
+            sortConfig.direction ===
+            "asc"
+          ) {
+
+            return valueA -
+              valueB;
+
+          }
+
+
+          return valueB -
+            valueA;
+
+        }
+      );
+
+
+      return sorted;
+
+    }, [
+      filteredMembers,
+      sortConfig,
+    ]);
+
+
+  // =========================================================
+  // TOTAL PAGES
+  // =========================================================
+
+  const totalPages =
+    Math.ceil(
+      sortedMembers.length /
+        membersPerPage
+    );
+
+
+  // =========================================================
+  // PAGINATION INDEX
+  // =========================================================
+
+  const startIndex =
+    (currentPage - 1) *
+    membersPerPage;
+
+
+  const endIndex =
+    startIndex +
+    membersPerPage;
+
+
+  // =========================================================
+  // DATA YANG DITAMPILKAN DI HALAMAN AKTIF
+  // =========================================================
+
+  const paginatedMembers =
+    sortedMembers.slice(
+      startIndex,
+      endIndex
+    );
+
+
+  // =========================================================
+  // HANDLE SORT
+  // =========================================================
+
+  const handleSort =
+    (key) => {
+
+      setCurrentPage(1);
+
+
+      setSortConfig(
+        (previous) => {
+
+          if (
+            previous.key ===
+            key
+          ) {
+
+            return {
+              key,
+              direction:
+                previous.direction ===
+                "asc"
+                  ? "desc"
+                  : "asc",
+            };
+
+          }
+
+
+          return {
+            key,
+            direction:
+              key === "name"
+                ? "asc"
+                : "desc",
+          };
+
+        }
+      );
+
+    };
+
+
+  // =========================================================
+  // SORT ICON
+  // =========================================================
+
+  const getSortIcon =
+    (key) => {
+
+      if (
+        sortConfig.key !==
+        key
+      ) {
+
+        return (
+          <span className="members-sort-icon">
+            ↕
+          </span>
+        );
+
+      }
+
+
+      if (
+        sortConfig.direction ===
+        "asc"
+      ) {
+
+        return (
+          <span className="members-sort-icon active">
+            ↑
+          </span>
+        );
+
+      }
+
+
+      return (
+        <span className="members-sort-icon active">
+          ↓
+        </span>
+      );
+
+    };
+
+
+  // =========================================================
+  // STATISTICS
+  // =========================================================
+
+  const totalMembers =
+    members.length;
+
+
+  const totalHadir =
+    members.reduce(
+      (total, member) =>
+        total +
+        (member.hadir || 0),
+      0
+    );
+
+
+  const totalIzin =
+    members.reduce(
+      (total, member) =>
+        total +
+        (member.izin || 0),
+      0
+    );
+
+
+  const totalSakit =
+    members.reduce(
+      (total, member) =>
+        total +
+        (member.sakit || 0),
+      0
+    );
+
+
+  // =========================================================
   // FORMAT DATE
   // =========================================================
 
@@ -238,9 +499,9 @@ function Members() {
       }
 
 
-      /*
-       * Jika Firestore Timestamp
-       */
+      // ===============================================
+      // FIRESTORE TIMESTAMP
+      // ===============================================
 
       if (
         typeof date?.toDate ===
@@ -250,28 +511,38 @@ function Members() {
         const convertedDate =
           date.toDate();
 
+
         const day =
           String(
             convertedDate.getDate()
-          ).padStart(2, "0");
+          ).padStart(
+            2,
+            "0"
+          );
+
 
         const month =
           String(
             convertedDate.getMonth() +
               1
-          ).padStart(2, "0");
+          ).padStart(
+            2,
+            "0"
+          );
+
 
         const year =
           convertedDate.getFullYear();
+
 
         return `${day}-${month}-${year}`;
 
       }
 
 
-      /*
-       * Jika Date object
-       */
+      // ===============================================
+      // DATE OBJECT
+      // ===============================================
 
       if (
         date instanceof Date
@@ -280,24 +551,34 @@ function Members() {
         const day =
           String(
             date.getDate()
-          ).padStart(2, "0");
+          ).padStart(
+            2,
+            "0"
+          );
+
 
         const month =
           String(
-            date.getMonth() + 1
-          ).padStart(2, "0");
+            date.getMonth() +
+              1
+          ).padStart(
+            2,
+            "0"
+          );
+
 
         const year =
           date.getFullYear();
+
 
         return `${day}-${month}-${year}`;
 
       }
 
 
-      /*
-       * Jika string YYYY-MM-DD
-       */
+      // ===============================================
+      // STRING YYYY-MM-DD
+      // ===============================================
 
       if (
         typeof date ===
@@ -309,7 +590,8 @@ function Members() {
 
 
         if (
-          parts.length === 3
+          parts.length ===
+          3
         ) {
 
           return `${parts[2]}-${parts[1]}-${parts[0]}`;
@@ -320,6 +602,30 @@ function Members() {
 
 
       return date;
+
+    };
+
+
+  // =========================================================
+  // GO TO PAGE
+  // =========================================================
+
+  const goToPage =
+    (page) => {
+
+      if (
+        page < 1 ||
+        page > totalPages
+      ) {
+
+        return;
+
+      }
+
+
+      setCurrentPage(
+        page
+      );
 
     };
 
@@ -384,6 +690,8 @@ function Members() {
       <div className="members-stats">
 
 
+        {/* TOTAL ANGGOTA */}
+
         <div className="members-stat-card">
 
           <div className="members-stat-icon">
@@ -404,6 +712,8 @@ function Members() {
 
         </div>
 
+
+        {/* TOTAL HADIR */}
 
         <div className="members-stat-card">
 
@@ -426,6 +736,8 @@ function Members() {
         </div>
 
 
+        {/* TOTAL IZIN */}
+
         <div className="members-stat-card">
 
           <div className="members-stat-icon">
@@ -446,6 +758,8 @@ function Members() {
 
         </div>
 
+
+        {/* TOTAL SAKIT */}
 
         <div className="members-stat-card">
 
@@ -478,6 +792,10 @@ function Members() {
       <div className="admin-card">
 
 
+        {/* =================================================
+            HEADER TABLE
+        ================================================= */}
+
         <div className="admin-card-header">
 
           <div>
@@ -487,8 +805,8 @@ function Members() {
             </h2>
 
             <p>
-              Jabatan mengikuti
-              struktur organisasi.
+              Klik judul kolom untuk
+              mengurutkan data.
             </p>
 
           </div>
@@ -537,6 +855,53 @@ function Members() {
 
 
         {/* =================================================
+            HASIL PENCARIAN
+        ================================================= */}
+
+        {!loading &&
+          filteredMembers.length >
+            0 && (
+
+            <div
+              className="members-result-info"
+            >
+
+              Menampilkan{" "}
+
+              <strong>
+                {startIndex + 1}
+              </strong>
+
+              {" - "}
+
+              <strong>
+                {Math.min(
+                  endIndex,
+                  sortedMembers.length
+                )}
+              </strong>
+
+              {" dari "}
+
+              <strong>
+                {sortedMembers.length}
+              </strong>
+
+              {" anggota"}
+
+              {search && (
+                <>
+                  {" "}
+                  hasil pencarian
+                </>
+              )}
+
+            </div>
+
+          )}
+
+
+        {/* =================================================
             LOADING
         ================================================= */}
 
@@ -579,7 +944,7 @@ function Members() {
 
               {search
                 ? "Coba gunakan kata pencarian yang berbeda."
-                : "Tambahkan anggota terlebih dahulu melalui Struktur Organisasi."}
+                : "Tambahkan anggota terlebih dahulu melalui Kelola Akun."}
 
             </p>
 
@@ -593,259 +958,484 @@ function Members() {
              TABLE
           =============================================== */
 
-          <div className="members-table-wrapper">
+          <>
 
-            <table className="members-table">
+            <div className="members-table-wrapper">
 
-              <thead>
+              <table className="members-table">
 
-                <tr>
+                <thead>
 
-                  <th>
-                    No
-                  </th>
+                  <tr>
 
-                  <th>
-                    Anggota
-                  </th>
+                    {/* NO */}
 
-                  <th>
-                    Jabatan
-                  </th>
-
-                  <th>
-                    Total Kehadiran
-                  </th>
-
-                  <th>
-                    Hadir
-                  </th>
-
-                  <th>
-                    Izin
-                  </th>
-
-                  <th>
-                    Sakit
-                  </th>
-
-                  <th>
-                    Detail
-                  </th>
-
-                </tr>
-
-              </thead>
+                    <th>
+                      No
+                    </th>
 
 
-              <tbody>
+                    {/* ANGGOTA */}
 
-                {filteredMembers.map(
-                  (
-                    member,
-                    index
-                  ) => (
+                    <th>
 
-                    <tr
-                      key={
-                        member.id
-                      }
-                    >
-
-
-                      {/* NO */}
-
-                      <td>
-
-                        {
-                          index + 1
+                      <button
+                        type="button"
+                        className="members-sort-button"
+                        onClick={() =>
+                          handleSort(
+                            "name"
+                          )
                         }
+                      >
 
-                      </td>
+                        <span>
+                          Anggota
+                        </span>
+
+                        {getSortIcon(
+                          "name"
+                        )}
+
+                      </button>
+
+                    </th>
 
 
-                      {/* =================================
-                          MEMBER
-                      ================================= */}
+                    {/* JABATAN */}
 
-                      <td>
-
-                        <div className="member-table-user">
+                    <th>
+                      Jabatan
+                    </th>
 
 
-                          {/* FOTO */}
+                    {/* TOTAL KEHADIRAN */}
 
-                          <div className="member-table-avatar">
+                    <th>
 
-                            {member.photo ? (
+                      <button
+                        type="button"
+                        className="members-sort-button"
+                        onClick={() =>
+                          handleSort(
+                            "attendanceTotal"
+                          )
+                        }
+                      >
 
-                              <img
-                                src={
-                                  member.photo
-                                }
-                                alt={
+                        <span>
+                          Total Kehadiran
+                        </span>
+
+                        {getSortIcon(
+                          "attendanceTotal"
+                        )}
+
+                      </button>
+
+                    </th>
+
+
+                    {/* HADIR */}
+
+                    <th>
+
+                      <button
+                        type="button"
+                        className="members-sort-button"
+                        onClick={() =>
+                          handleSort(
+                            "hadir"
+                          )
+                        }
+                      >
+
+                        <span>
+                          Hadir
+                        </span>
+
+                        {getSortIcon(
+                          "hadir"
+                        )}
+
+                      </button>
+
+                    </th>
+
+
+                    {/* IZIN */}
+
+                    <th>
+
+                      <button
+                        type="button"
+                        className="members-sort-button"
+                        onClick={() =>
+                          handleSort(
+                            "izin"
+                          )
+                        }
+                      >
+
+                        <span>
+                          Izin
+                        </span>
+
+                        {getSortIcon(
+                          "izin"
+                        )}
+
+                      </button>
+
+                    </th>
+
+
+                    {/* SAKIT */}
+
+                    <th>
+
+                      <button
+                        type="button"
+                        className="members-sort-button"
+                        onClick={() =>
+                          handleSort(
+                            "sakit"
+                          )
+                        }
+                      >
+
+                        <span>
+                          Sakit
+                        </span>
+
+                        {getSortIcon(
+                          "sakit"
+                        )}
+
+                      </button>
+
+                    </th>
+
+
+                    {/* DETAIL */}
+
+                    <th>
+                      Detail
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                  {paginatedMembers.map(
+                    (
+                      member,
+                      index
+                    ) => (
+
+                      <tr
+                        key={
+                          member.id
+                        }
+                      >
+
+
+                        {/* NO */}
+
+                        <td>
+
+                          {
+                            startIndex +
+                            index +
+                            1
+                          }
+
+                        </td>
+
+
+                        {/* =================================
+                            MEMBER
+                        ================================= */}
+
+                        <td>
+
+                          <div className="member-table-user">
+
+
+                            {/* FOTO */}
+
+                            <div className="member-table-avatar">
+
+                              {member.photo ? (
+
+                                <img
+                                  src={
+                                    member.photo
+                                  }
+                                  alt={
+                                    getMemberName(
+                                      member
+                                    )
+                                  }
+                                />
+
+                              ) : (
+
+                                getMemberInitial(
+                                  member
+                                )
+
+                              )}
+
+                            </div>
+
+
+                            {/* INFO */}
+
+                            <div>
+
+                              <strong>
+
+                                {
                                   getMemberName(
                                     member
                                   )
                                 }
-                              />
 
-                            ) : (
+                              </strong>
 
-                              getMemberInitial(
+
+                              {member.email && (
+
+                                <span>
+
+                                  {
+                                    member.email
+                                  }
+
+                                </span>
+
+                              )}
+
+                            </div>
+
+
+                          </div>
+
+                        </td>
+
+
+                        {/* JABATAN */}
+
+                        <td>
+
+                          <span className="member-position">
+
+                            {
+                              getMemberPosition(
                                 member
                               )
+                            }
 
-                            )}
+                          </span>
 
-                          </div>
-
-
-                          {/* INFO */}
-
-                          <div>
-
-                            <strong>
-
-                              {
-                                getMemberName(
-                                  member
-                                )
-                              }
-
-                            </strong>
+                        </td>
 
 
-                            {member.email && (
+                        {/* TOTAL */}
 
-                              <span>
+                        <td>
 
-                                {
-                                  member.email
-                                }
+                          <strong className="member-total-attendance">
 
-                              </span>
+                            {
+                              member.attendanceTotal ||
+                              0
+                            }
 
-                            )}
+                          </strong>
 
-                          </div>
-
-
-                        </div>
-
-                      </td>
+                        </td>
 
 
-                      {/* JABATAN */}
+                        {/* HADIR */}
 
-                      <td>
+                        <td>
 
-                        <span className="member-position">
+                          <span className="member-count hadir">
 
-                          {
-                            getMemberPosition(
-                              member
-                            )
-                          }
+                            {
+                              member.hadir ||
+                              0
+                            }
 
-                        </span>
+                          </span>
 
-                      </td>
-
-
-                      {/* TOTAL */}
-
-                      <td>
-
-                        <strong className="member-total-attendance">
-
-                          {
-                            member.attendanceTotal ||
-                            0
-                          }
-
-                        </strong>
-
-                      </td>
+                        </td>
 
 
-                      {/* HADIR */}
+                        {/* IZIN */}
 
-                      <td>
+                        <td>
 
-                        <span className="member-count hadir">
+                          <span className="member-count izin">
 
-                          {
-                            member.hadir ||
-                            0
-                          }
+                            {
+                              member.izin ||
+                              0
+                            }
 
-                        </span>
+                          </span>
 
-                      </td>
-
-
-                      {/* IZIN */}
-
-                      <td>
-
-                        <span className="member-count izin">
-
-                          {
-                            member.izin ||
-                            0
-                          }
-
-                        </span>
-
-                      </td>
+                        </td>
 
 
-                      {/* SAKIT */}
+                        {/* SAKIT */}
 
-                      <td>
+                        <td>
 
-                        <span className="member-count sakit">
+                          <span className="member-count sakit">
 
-                          {
-                            member.sakit ||
-                            0
-                          }
+                            {
+                              member.sakit ||
+                              0
+                            }
 
-                        </span>
+                          </span>
 
-                      </td>
+                        </td>
 
 
-                      {/* DETAIL */}
+                        {/* DETAIL */}
 
-                      <td>
+                        <td>
+
+                          <button
+                            type="button"
+                            className="member-detail-button"
+                            onClick={() =>
+                              setSelectedMember(
+                                member
+                              )
+                            }
+                          >
+                            Lihat
+                          </button>
+
+                        </td>
+
+
+                      </tr>
+
+                    )
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+
+            {/* =================================================
+                PAGINATION
+            ================================================= */}
+
+            {totalPages > 1 && (
+
+              <div className="members-pagination">
+
+
+                {/* PREVIOUS */}
+
+                <button
+                  type="button"
+                  className="members-pagination-button"
+                  onClick={() =>
+                    goToPage(
+                      currentPage - 1
+                    )
+                  }
+                  disabled={
+                    currentPage === 1
+                  }
+                >
+                  ← Prev
+                </button>
+
+
+                {/* PAGE NUMBERS */}
+
+                <div className="members-pagination-pages">
+
+                  {Array.from(
+                    {
+                      length:
+                        totalPages,
+                    },
+                    (_, index) => {
+
+                      const page =
+                        index + 1;
+
+
+                      return (
 
                         <button
+                          key={
+                            page
+                          }
                           type="button"
-                          className="member-detail-button"
+                          className={`members-pagination-page ${
+                            currentPage ===
+                            page
+                              ? "active"
+                              : ""
+                          }`}
                           onClick={() =>
-                            setSelectedMember(
-                              member
+                            goToPage(
+                              page
                             )
                           }
                         >
-                          Lihat
+                          {page}
                         </button>
 
-                      </td>
+                      );
+
+                    }
+                  )}
+
+                </div>
 
 
-                    </tr>
+                {/* NEXT */}
 
-                  )
-                )}
+                <button
+                  type="button"
+                  className="members-pagination-button"
+                  onClick={() =>
+                    goToPage(
+                      currentPage + 1
+                    )
+                  }
+                  disabled={
+                    currentPage ===
+                    totalPages
+                  }
+                >
+                  Next →
+                </button>
 
-              </tbody>
 
-            </table>
+              </div>
 
-          </div>
+            )}
+
+          </>
 
         )}
 

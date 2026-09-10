@@ -792,38 +792,115 @@ function Home() {
 
 
       {/* ======================================
-          VISION
-      ====================================== */}
+    VISION
+====================================== */}
 
-      {about?.vision && (
+{about?.vision && (
 
-        <section className="home-vision">
+  <section className="home-vision">
 
-          <div className="home-vision-container">
+    <div className="home-vision-container">
 
-            <div className="home-vision-icon">
-              🎯
-            </div>
+      <div className="home-vision-icon">
+        🎯
+      </div>
+
+      <div>
+
+        <span className="section-label">
+          VISI ORGANISASI
+        </span>
+
+        <h2>
+          {about.vision}
+        </h2>
+
+      </div>
+
+    </div>
+
+  </section>
+
+)}
 
 
-            <div>
+{/* ======================================
+    MISSIONS
+====================================== */}
 
-              <span className="section-label">
-                VISI ORGANISASI
-              </span>
+{about?.missions &&
+  about.missions.filter(
+    (mission) =>
+      mission &&
+      mission.trim() !== ""
+  ).length > 0 && (
+
+    <section className="home-missions">
+
+      <div className="home-missions-container">
+
+        <div className="home-missions-header">
+
+          <span className="section-label">
+            MISI ORGANISASI
+          </span>
+
+          <h2>
+            Misi Kami
+          </h2>
+
+          <p>
+            Langkah dan komitmen yang dilakukan
+            untuk mewujudkan visi organisasi.
+          </p>
+
+        </div>
 
 
-              <h2>
-                {about.vision}
-              </h2>
+        <div className="home-missions-list">
 
-            </div>
+          {about.missions
+            .filter(
+              (mission) =>
+                mission &&
+                mission.trim() !== ""
+            )
+            .map(
+              (mission, index) => (
 
-          </div>
+                <div
+                  className="home-mission-item"
+                  key={index}
+                >
 
-        </section>
+                  <div className="home-mission-number">
+                    {String(index + 1).padStart(2, "0")}
+                  </div>
 
-      )}
+                  <div className="home-mission-content">
+
+                    <h3>
+                      Misi {index + 1}
+                    </h3>
+
+                    <p>
+                      {mission}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              )
+            )}
+
+        </div>
+
+      </div>
+
+    </section>
+
+)}
 
 
       {/* ======================================

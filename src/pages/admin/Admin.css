@@ -1627,53 +1627,92 @@
   }
 }
 
-/* ==========================================================================
-   DASHBOARD PAGE STYLES (MODERN GLASSMORPHISM & RESPONSIVE)
-   ========================================================================== */
-
 
 :root {
-  /* Colors */
-  --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+  --primary-gradient: linear-gradient(
+    135deg,
+    #4f46e5 0%,
+    #3b82f6 100%
+  );
+
   --bg-main: #f8fafc;
+
   --surface: rgba(255, 255, 255, 0.85);
+
   --surface-solid: #ffffff;
+
   --text-primary: #0f172a;
+
   --text-secondary: #475569;
+
   --text-muted: #94a3b8;
+
   --border-color: #e2e8f0;
+
   --border-light: #f1f5f9;
 
-  /* Stat Card Accent Colors */
   --icon-bg-blue: rgba(99, 102, 241, 0.1);
+
   --icon-color-blue: #6366f1;
+
   --icon-bg-purple: rgba(168, 85, 247, 0.1);
+
   --icon-color-purple: #a855f7;
 
-  /* Shadows & Backdrop Blur */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+
   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.05);
-  --shadow-lg: 0 12px 30px -10px rgba(79, 70, 229, 0.25);
+
+  --shadow-lg: 0 12px 30px -10px
+    rgba(79, 70, 229, 0.25);
+
   --glass-backdrop: blur(12px);
+
   --radius-lg: 20px;
+
   --radius-md: 14px;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  --transition: all 0.25s
+    cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Layout Utama Dashboard */
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
 .dashboard-page {
   display: flex;
   flex-direction: column;
+
   gap: 28px;
+
   width: 100%;
+
   max-width: 1280px;
+
   margin: 0 auto;
+
   padding: 24px;
-  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  font-family:
+    "Plus Jakarta Sans",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+
   box-sizing: border-box;
+
   background-color: var(--bg-main);
+
   min-height: 100vh;
 }
+
+
+/* =========================================================
+   BOX SIZING
+========================================================= */
 
 .dashboard-page *,
 .dashboard-page *::before,
@@ -1681,260 +1720,614 @@
   box-sizing: border-box;
 }
 
-/* Welcome Banner */
+
+/* =========================================================
+   WELCOME CARD
+========================================================= */
+
 .dashboard-welcome {
   position: relative;
+
   background: var(--primary-gradient);
+
   border-radius: var(--radius-lg);
+
   padding: 32px 36px;
+
   color: #ffffff;
+
   box-shadow: var(--shadow-lg);
+
   overflow: hidden;
+
   transition: var(--transition);
 }
 
-/* Ornamen Efek Cahaya Transparan */
+
+/* =========================================================
+   DEKORASI LINGKARAN 1
+========================================================= */
+
 .dashboard-welcome::before {
   content: "";
+
   position: absolute;
+
   top: -40px;
+
   right: 120px;
+
   width: 180px;
+
   height: 180px;
+
   background: rgba(255, 255, 255, 0.12);
+
   border-radius: 50%;
+
   pointer-events: none;
+
   filter: blur(10px);
 }
 
+
+/* =========================================================
+   DEKORASI LINGKARAN 2
+========================================================= */
+
 .dashboard-welcome::after {
   content: "";
+
   position: absolute;
+
   right: -20px;
+
   bottom: -40px;
+
   width: 240px;
+
   height: 240px;
+
   background: rgba(255, 255, 255, 0.15);
+
   border-radius: 50%;
+
   pointer-events: none;
+
   backdrop-filter: blur(4px);
+
+  -webkit-backdrop-filter: blur(4px);
 }
 
-/* Label / Badge Kategori */
+
+/* =========================================================
+   CONTENT WELCOME
+   Supaya teks selalu berada di atas dekorasi
+========================================================= */
+
+.dashboard-welcome > div {
+  position: relative;
+
+  z-index: 2;
+}
+
+
+/* =========================================================
+   LABEL ADMIN PANEL
+========================================================= */
+
 .dashboard-label {
   display: inline-flex;
+
   align-items: center;
+
   padding: 6px 14px;
+
   background: rgba(255, 255, 255, 0.2);
+
   backdrop-filter: blur(8px);
+
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.3);
+
   border-radius: 30px;
+
   font-size: 0.725rem;
+
   font-weight: 800;
+
   letter-spacing: 0.08em;
+
   text-transform: uppercase;
+
   color: #ffffff;
+
   margin-bottom: 14px;
 }
 
+
+/* =========================================================
+   JUDUL SELAMAT DATANG
+========================================================= */
+
 .dashboard-welcome h2 {
   margin: 0 0 8px;
+
   font-size: 1.75rem;
+
   font-weight: 800;
+
   color: #ffffff;
+
   letter-spacing: -0.025em;
+
   line-height: 1.25;
 }
 
+
+/* =========================================================
+   DESKRIPSI
+========================================================= */
+
 .dashboard-welcome p {
   margin: 0;
+
   font-size: 0.95rem;
+
   color: rgba(255, 255, 255, 0.9);
+
   max-width: 620px;
+
   line-height: 1.5;
 }
 
-/* Dashboard Stats Grid */
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
 .dashboard-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(260px, 1fr)
+    );
+
   gap: 20px;
 }
 
+
+/* =========================================================
+   STAT CARD
+========================================================= */
+
 .dashboard-stat-card {
   display: flex;
+
   align-items: center;
+
   gap: 18px;
+
   padding: 22px 24px;
+
   background: var(--surface);
+
   backdrop-filter: var(--glass-backdrop);
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+
+  -webkit-backdrop-filter:
+    var(--glass-backdrop);
+
+  border: 1px solid
+    rgba(226, 232, 240, 0.8);
+
   border-radius: var(--radius-md);
+
   box-shadow: var(--shadow-md);
+
   transition: var(--transition);
 }
+
+
+/* =========================================================
+   HOVER STAT CARD
+========================================================= */
 
 .dashboard-stat-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
-  border-color: rgba(99, 102, 241, 0.3);
+
+  box-shadow:
+    0 10px 25px -5px
+    rgba(15, 23, 42, 0.08);
+
+  border-color:
+    rgba(99, 102, 241, 0.3);
 }
+
+
+/* =========================================================
+   ICON
+========================================================= */
 
 .stat-icon {
   width: 56px;
+
   height: 56px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   background: var(--icon-bg-blue);
+
   color: var(--icon-color-blue);
+
   border-radius: 14px;
+
   font-size: 1.5rem;
+
   flex-shrink: 0;
+
   transition: var(--transition);
 }
 
-.dashboard-stat-card:nth-child(2n) .stat-icon {
+
+/* =========================================================
+   ICON BERITA
+========================================================= */
+
+.dashboard-stat-card:nth-child(2n)
+  .stat-icon {
   background: var(--icon-bg-purple);
+
   color: var(--icon-color-purple);
 }
 
-.dashboard-stat-card:hover .stat-icon {
+
+/* =========================================================
+   HOVER ICON
+========================================================= */
+
+.dashboard-stat-card:hover
+  .stat-icon {
   transform: scale(1.05);
 }
 
+
+/* =========================================================
+   LABEL STATISTIK
+========================================================= */
+
 .dashboard-stat-card span {
   display: block;
+
   font-size: 0.825rem;
+
   font-weight: 600;
+
   color: var(--text-muted);
+
   text-transform: uppercase;
+
   letter-spacing: 0.04em;
+
   margin-bottom: 4px;
 }
 
+
+/* =========================================================
+   ANGKA STATISTIK
+========================================================= */
+
 .dashboard-stat-card strong {
   display: block;
+
   font-size: 1.75rem;
+
   font-weight: 800;
+
   color: var(--text-primary);
+
   line-height: 1;
 }
 
-/* Dashboard Section & Empty State Container */
+
+/* =========================================================
+   SECTION
+========================================================= */
+
 .dashboard-section {
   background: var(--surface);
-  backdrop-filter: var(--glass-backdrop);
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+
+  backdrop-filter:
+    var(--glass-backdrop);
+
+  -webkit-backdrop-filter:
+    var(--glass-backdrop);
+
+  border: 1px solid
+    rgba(226, 232, 240, 0.8);
+
   border-radius: var(--radius-lg);
+
   padding: 28px;
+
   box-shadow: var(--shadow-md);
 }
 
+
+/* =========================================================
+   SECTION HEADER
+========================================================= */
+
 .dashboard-section-header h3 {
   margin: 0;
+
   font-size: 1.2rem;
+
   font-weight: 700;
+
   color: var(--text-primary);
+
   letter-spacing: -0.01em;
 }
 
+
 .dashboard-section-header p {
   margin: 4px 0 0;
+
   font-size: 0.875rem;
+
   color: var(--text-muted);
 }
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
 
 .dashboard-empty {
   display: flex;
+
   flex-direction: column;
+
   align-items: center;
+
   justify-content: center;
+
   padding: 56px 24px;
+
   text-align: center;
+
   margin-top: 20px;
+
   border: 2px dashed #cbd5e1;
+
   border-radius: var(--radius-md);
-  background: rgba(248, 250, 252, 0.6);
+
+  background:
+    rgba(248, 250, 252, 0.6);
+
   transition: var(--transition);
 }
 
+
 .dashboard-empty:hover {
-  border-color: var(--icon-color-blue);
-  background: rgba(248, 250, 252, 0.9);
+  border-color:
+    var(--icon-color-blue);
+
+  background:
+    rgba(248, 250, 252, 0.9);
 }
+
 
 .dashboard-empty div {
   font-size: 2.75rem;
+
   margin-bottom: 12px;
+
   opacity: 0.85;
 }
 
+
 .dashboard-empty h4 {
   margin: 0 0 6px;
+
   font-size: 1.05rem;
+
   font-weight: 700;
+
   color: var(--text-primary);
 }
 
+
 .dashboard-empty p {
   margin: 0;
+
   font-size: 0.875rem;
+
   color: var(--text-muted);
+
   max-width: 360px;
 }
 
-/* ==========================================================================
-   RESPONSIVE DESIGN (MOBILE & TABLET BREAKPOINTS)
-   ========================================================================== */
+
+/* =========================================================
+   MOBILE
+========================================================= */
 
 @media (max-width: 768px) {
+
   .dashboard-page {
     padding: 16px;
+
     gap: 20px;
   }
 
+
+  /* =======================================================
+     WELCOME MOBILE
+  ======================================================= */
+
   .dashboard-welcome {
     padding: 24px 20px;
+
     border-radius: var(--radius-md);
   }
+
+
+  /* =======================================================
+     HILANGKAN SEMUA LINGKARAN DI MOBILE
+  ======================================================= */
+
+  .dashboard-welcome::before,
+  .dashboard-welcome::after {
+    display: none;
+  }
+
+
+  /* =======================================================
+     JUDUL
+  ======================================================= */
 
   .dashboard-welcome h2 {
     font-size: 1.35rem;
   }
 
+
+  /* =======================================================
+     DESKRIPSI
+  ======================================================= */
+
   .dashboard-welcome p {
     font-size: 0.875rem;
   }
 
+
+  /* =======================================================
+     STATISTICS
+  ======================================================= */
+
   .dashboard-stats {
     grid-template-columns: 1fr;
+
     gap: 14px;
   }
+
+
+  /* =======================================================
+     STAT CARD
+  ======================================================= */
 
   .dashboard-stat-card {
     padding: 18px 20px;
   }
 
+
+  /* =======================================================
+     ICON
+  ======================================================= */
+
   .stat-icon {
     width: 48px;
+
     height: 48px;
+
     font-size: 1.25rem;
   }
+
+
+  /* =======================================================
+     ANGKA
+  ======================================================= */
 
   .dashboard-stat-card strong {
     font-size: 1.5rem;
   }
 
+
+  /* =======================================================
+     SECTION
+  ======================================================= */
+
   .dashboard-section {
     padding: 20px;
   }
 
+
+  /* =======================================================
+     EMPTY
+  ======================================================= */
+
   .dashboard-empty {
     padding: 40px 16px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE KECIL
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .dashboard-page {
+    padding: 12px;
+  }
+
+
+  .dashboard-welcome {
+    padding: 22px 18px;
+  }
+
+
+  .dashboard-welcome h2 {
+    font-size: 1.2rem;
+
+    line-height: 1.35;
+  }
+
+
+  .dashboard-welcome p {
+    font-size: 0.82rem;
+  }
+
+
+  .dashboard-label {
+    font-size: 0.65rem;
+
+    padding: 5px 11px;
+  }
+
+
+  .dashboard-stat-card {
+    gap: 14px;
+
+    padding: 16px;
+  }
+
+
+  .stat-icon {
+    width: 44px;
+
+    height: 44px;
+
+    font-size: 1.1rem;
+  }
+
+
+  .dashboard-stat-card span {
+    font-size: 0.75rem;
+  }
+
+
+  .dashboard-stat-card strong {
+    font-size: 1.35rem;
   }
 }
 
@@ -2603,7 +2996,11 @@
    RESPONSIVE DESIGN (MOBILE & TABLET BREAKPOINTS)
    ========================================================================== */
 
+
+
+
 @media (max-width: 768px) {
+  
   .admin-page {
     padding: 16px;
   }

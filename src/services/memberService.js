@@ -111,140 +111,70 @@ export const getAllMemberAttendance =
 
 // =========================================================
 // GET MEMBERS WITH ATTENDANCE
+// SUMBER DATA ANGGOTA = USERS / KELOLA AKUN
 // =========================================================
 
 export const getMembersWithAttendance =
   async () => {
 
     const [
-      members,
-      attendance,
       users,
+      attendance,
     ] = await Promise.all([
 
-      getOrganizationMembers(),
+      getAllUsers(),
 
       getAllMemberAttendance(),
-
-      getAllUsers(),
 
     ]);
 
 
     // =====================================================
-    // USER MAP
+    // HANYA AMBIL AKUN DENGAN ROLE ANGGOTA
     // =====================================================
 
-    const userMap =
-      new Map();
-
-
-    users.forEach(
-      (user) => {
-
-        if (user.uid) {
-
-          userMap.set(
-            user.uid,
-            user
-          );
-
-        } else if (user.id) {
-
-          userMap.set(
-            user.id,
-            user
-          );
-
-        }
-
-      }
-    );
-
-
-    // =====================================================
-    // GABUNG MEMBER + USER
-    // =====================================================
-
-    const membersWithUserData =
-      members.map(
-        (member) => {
-
-          const user =
-            member.uid
-              ? userMap.get(
-                  member.uid
-                )
-              : null;
-
-
-          /*
-           * FOTO UTAMA DIAMBIL
-           * DARI organization_members.photo
-           *
-           * Jika belum tersedia, gunakan
-           * users/{uid}.photo sebagai fallback.
-           */
-
-          const photo =
-            member.photo ||
-            user?.photo ||
-            "";
-
-
-          const photoPublicId =
-            member.photoPublicId ||
-            user?.photoPublicId ||
-            "";
-
-
-          const name =
-            member.name ||
-            user?.name ||
-            user?.displayName ||
-            "Tanpa Nama";
-
-
-          const email =
-            member.email ||
-            user?.email ||
-            "";
-
-
-          return {
-
-            ...member,
-
-            name,
-
-            email,
-
-            photo,
-
-            photoPublicId,
-
-          };
-
-        }
+    const memberUsers =
+      users.filter(
+        (user) =>
+          user.role ===
+          "anggota"
       );
 
 
     // =====================================================
-    // GABUNG DATA ABSENSI
+    // GABUNG DATA ANGGOTA + ABSENSI
     // =====================================================
 
-    return membersWithUserData.map(
-      (member) => {
+    return memberUsers.map(
+      (user) => {
+
+        /*
+         * UID
+         *
+         * Biasanya ID document users sama dengan UID.
+         * Tetapi kita tetap mendukung field uid jika tersedia.
+         */
+
+        const uid =
+          user.uid ||
+          user.id ||
+          "";
+
+
+        // =================================================
+        // CARI ABSENSI BERDASARKAN UID
+        // =================================================
 
         const memberAttendance =
-          member.uid
-            ? attendance.filter(
-                (item) =>
-                  item.uid ===
-                  member.uid
-              )
-            : [];
+          attendance.filter(
+            (item) =>
+              item.uid === uid
+          );
 
+
+        // =================================================
+        // HITUNG HADIR
+        // =================================================
 
         const hadir =
           memberAttendance.filter(
@@ -256,6 +186,10 @@ export const getMembersWithAttendance =
           ).length;
 
 
+        // =================================================
+        // HITUNG IZIN
+        // =================================================
+
         const izin =
           memberAttendance.filter(
             (item) =>
@@ -265,6 +199,10 @@ export const getMembersWithAttendance =
                 "approved"
           ).length;
 
+
+        // =================================================
+        // HITUNG SAKIT
+        // =================================================
 
         const sakit =
           memberAttendance.filter(
@@ -276,6 +214,10 @@ export const getMembersWithAttendance =
           ).length;
 
 
+        // =================================================
+        // HITUNG PENDING
+        // =================================================
+
         const pending =
           memberAttendance.filter(
             (item) =>
@@ -284,14 +226,109 @@ export const getMembersWithAttendance =
           ).length;
 
 
+        // =================================================
+        // RETURN DATA ANGGOTA
+        // =================================================
+
         return {
 
-          ...member,
+          /*
+           * ID
+           */
+
+          id:
+            user.id,
+
+
+          /*
+           * UID
+           */
+
+          uid:
+
+
+            user.uid ||
+            user.id,
+
+
+          /*
+           * NAMA
+           */
+
+          name:
+            user.name ||
+            user.displayName ||
+            "Tanpa Nama",
+
+
+          /*
+           * EMAIL
+           */
+
+          email:
+            user.email ||
+            "",
+
+
+          /*
+           * FOTO
+           */
+
+          photo:
+            user.photo ||
+            "",
+
+
+          /*
+           * CLOUDINARY PUBLIC ID
+           */
+
+          photoPublicId:
+            user.photoPublicId ||
+            "",
+
+
+          /*
+           * KELAS
+           */
+
+          className:
+            user.className ||
+            "",
+
+
+          /*
+           * ROLE
+           */
+
+          role:
+            user.role ||
+            "anggota",
+
+
+          /*
+           * JABATAN
+           *
+           * Jika akun belum memiliki jabatan,
+           * tampilkan default.
+           */
+
+          position:
+            user.position ||
+            user.jabatan ||
+            user.role ||
+            "Belum ada jabatan",
+
+
+          /*
+           * DATA ABSENSI
+           */
 
           attendanceTotal:
             hadir +
             izin +
             sakit,
+
 
           hadir,
 
@@ -300,6 +337,11 @@ export const getMembersWithAttendance =
           sakit,
 
           pending,
+
+
+          /*
+           * RIWAYAT ABSENSI
+           */
 
           attendanceHistory:
             memberAttendance,

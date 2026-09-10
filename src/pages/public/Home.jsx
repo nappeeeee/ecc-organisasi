@@ -825,82 +825,129 @@ function Home() {
 
 
 {/* ======================================
-    MISSIONS
+    VISION & MISSIONS
 ====================================== */}
 
-{about?.missions &&
-  about.missions.filter(
-    (mission) =>
-      mission &&
-      mission.trim() !== ""
-  ).length > 0 && (
+{(about?.vision ||
+  (about?.missions &&
+    about.missions.filter(
+      (mission) =>
+        mission &&
+        mission.trim() !== ""
+    ).length > 0)) && (
 
-    <section className="home-missions">
+  <section className="home-about-values">
 
-      <div className="home-missions-container">
+    <div className="home-about-values-container">
 
-        <div className="home-missions-header">
+      {/* ==================================
+          VISION
+      ================================== */}
 
-          <span className="section-label">
-            MISI ORGANISASI
-          </span>
+      {about?.vision && (
 
-          <h2>
-            Misi Kami
-          </h2>
+        <div className="home-vision">
 
-          <p>
-            Langkah dan komitmen yang dilakukan
-            untuk mewujudkan visi organisasi.
-          </p>
+          <div className="home-vision-icon">
+            🎯
+          </div>
+
+          <div className="home-vision-content">
+
+            <span className="section-label">
+              VISI ORGANISASI
+            </span>
+
+            <h2>
+              {about.vision}
+            </h2>
+
+          </div>
 
         </div>
 
+      )}
 
-        <div className="home-missions-list">
 
-          {about.missions
-            .filter(
-              (mission) =>
-                mission &&
-                mission.trim() !== ""
-            )
-            .map(
-              (mission, index) => (
+      {/* ==================================
+          MISSIONS
+      ================================== */}
 
-                <div
-                  className="home-mission-item"
-                  key={index}
-                >
+            {about?.missions &&
+              about.missions.filter(
+                (mission) =>
+                  mission &&
+                  mission.trim() !== ""
+              ).length > 0 && (
 
-                  <div className="home-mission-number">
-                    {String(index + 1).padStart(2, "0")}
+                <div className="home-missions">
+
+                  <div className="home-missions-header">
+
+                    <div className="home-missions-icon">
+                      📋
+                    </div>
+
+                    <div>
+
+                      <span className="section-label">
+                        MISI ORGANISASI
+                      </span>
+
+                      <h2>
+                        Misi Kami
+                      </h2>
+
+                    </div>
+
                   </div>
 
-                  <div className="home-mission-content">
 
-                    <h3>
-                      Misi {index + 1}
-                    </h3>
+                  <div className="home-missions-list">
 
-                    <p>
-                      {mission}
-                    </p>
+                    {about.missions
+                      .filter(
+                        (mission) =>
+                          mission &&
+                          mission.trim() !== ""
+                      )
+                      .map(
+                        (mission, index) => (
+
+                          <div
+                            className="home-mission-item"
+                            key={index}
+                          >
+
+                            <div className="home-mission-number">
+                              {String(
+                                index + 1
+                              ).padStart(
+                                2,
+                                "0"
+                              )}
+                            </div>
+
+                            <p>
+                              {mission}
+                            </p>
+
+                          </div>
+
+                        )
+                      )}
 
                   </div>
 
                 </div>
 
-              )
-            )}
+              )}
 
-        </div>
+          </div>
 
-      </div>
+        </section>
 
-    </section>
-
-)}
+      )}
 
 
       {/* ======================================

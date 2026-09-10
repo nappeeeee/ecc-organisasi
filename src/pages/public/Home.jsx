@@ -893,11 +893,7 @@ function Home() {
                       <span className="section-label">
                         MISI ORGANISASI
                       </span>
-
-                      <h2>
-                        Misi Kami
-                      </h2>
-
+                 
                     </div>
 
                   </div>

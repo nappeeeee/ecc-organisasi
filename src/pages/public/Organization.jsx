@@ -1,171 +1,204 @@
 import { useEffect, useState } from "react";
+
 import {
   getSections,
   getMembers,
 } from "../../services/organizationService";
-import { getAllUsers } from "../../services/memberService";
+
 
 function Organization() {
+
   const [sections, setSections] = useState([]);
   const [members, setMembers] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+
+  // =========================================================
+  // LOAD ORGANIZATION
+  // =========================================================
+
   useEffect(() => {
-  const loadOrganization = async () => {
-    try {
-      setLoading(true);
-      setError("");
 
-      const [
-        sectionData,
-        memberData,
-        userData,
-      ] = await Promise.all([
-        getSections(),
-        getMembers(),
-        getAllUsers(),
-      ]);
+    const loadOrganization = async () => {
 
-      // =========================================================
-      // HANYA TAMPILKAN BAGIAN AKTIF
-      // =========================================================
+      try {
 
-      const activeSections = sectionData
-        .filter(
-          (section) =>
-            section.active !== false
-        )
-        .sort(
-          (a, b) =>
-            (a.order || 0) -
-            (b.order || 0)
+        setLoading(true);
+        setError("");
+
+
+        // =====================================================
+        // DATA PUBLIC
+        //
+        // Tidak lagi mengambil users karena halaman ini
+        // dapat diakses tanpa login.
+        // =====================================================
+
+        const [
+          sectionData,
+          memberData,
+        ] = await Promise.all([
+          getSections(),
+          getMembers(),
+        ]);
+
+
+        // =====================================================
+        // HANYA TAMPILKAN BAGIAN AKTIF
+        // =====================================================
+
+        const activeSections =
+          sectionData
+            .filter(
+              (section) =>
+                section.active !== false
+            )
+            .sort(
+              (a, b) =>
+                (a.order || 0) -
+                (b.order || 0)
+            );
+
+
+        // =====================================================
+        // HANYA TAMPILKAN ANGGOTA AKTIF
+        // =====================================================
+
+        const activeMembers =
+          memberData
+            .filter(
+              (member) =>
+                member.active !== false
+            )
+            .sort(
+              (a, b) =>
+                (a.order || 0) -
+                (b.order || 0)
+            );
+
+
+        // =====================================================
+        // MEMBER DATA
+        //
+        // Tidak mengambil data dari users.
+        //
+        // Nama dan foto langsung menggunakan data yang
+        // tersimpan di organization_members / members.
+        // =====================================================
+
+        const membersWithData =
+          activeMembers.map(
+            (member) => ({
+              ...member,
+
+              name:
+                member.name ||
+                member.nama ||
+                "Belum diisi",
+
+              photo:
+                member.photo ||
+                "",
+
+              email:
+                member.email ||
+                "",
+
+              uid:
+                member.uid ||
+                "",
+            })
+          );
+
+
+        setSections(
+          activeSections
         );
 
-      // =========================================================
-      // HANYA TAMPILKAN ANGGOTA AKTIF
-      // =========================================================
-
-      const activeMembers = memberData
-        .filter(
-          (member) =>
-            member.active !== false
-        )
-        .sort(
-          (a, b) =>
-            (a.order || 0) -
-            (b.order || 0)
+        setMembers(
+          membersWithData
         );
 
-      // =========================================================
-      // BUAT MAP USER BERDASARKAN UID
-      // =========================================================
 
-      const userMap = new Map();
+      } catch (error) {
 
-      userData.forEach((user) => {
-        if (user.uid) {
-          userMap.set(user.uid, user);
-        } else if (user.id) {
-          userMap.set(user.id, user);
-        }
-      });
+        console.error(
+          "Gagal mengambil struktur organisasi:",
+          error
+        );
 
-      // =========================================================
-      // GABUNGKAN MEMBER ORGANISASI + DATA USERS
-      //
-      // sectionId tetap berasal dari organization_members
-      // photo diambil dari users/{uid}
-      // =========================================================
+        setError(
+          "Gagal memuat struktur organisasi."
+        );
 
-      const membersWithUserData =
-        activeMembers.map((member) => {
-          const user = member.uid
-            ? userMap.get(member.uid)
-            : null;
+      } finally {
 
-          return {
-            ...member,
+        setLoading(false);
 
-            // Nama anggota
-            name:
-              member.name ||
-              user?.name ||
-              user?.displayName ||
-              "Belum diisi",
+      }
 
-            // Foto profil terbaru dari users
-            photo:
-              user?.photo || "",
+    };
 
-            // Email dari users jika diperlukan
-            email:
-              member.email ||
-              user?.email ||
-              "",
 
-            // UID tetap dipertahankan
-            uid:
-              member.uid ||
-              user?.uid ||
-              "",
-          };
-        });
+    loadOrganization();
 
-      setSections(activeSections);
-      setMembers(membersWithUserData);
+  }, []);
 
-    } catch (error) {
-      console.error(
-        "Gagal mengambil struktur organisasi:",
-        error
-      );
-
-      setError(
-        "Gagal memuat struktur organisasi."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  loadOrganization();
-}, []);
 
   // =========================================================
   // HELPER
   // =========================================================
 
-  const getMembersBySection = (sectionId) => {
+  const getMembersBySection = (
+    sectionId
+  ) => {
+
     return members
       .filter(
         (member) =>
-          member.sectionId === sectionId
+          member.sectionId ===
+          sectionId
       )
       .sort(
         (a, b) =>
           (a.order || 0) -
           (b.order || 0)
       );
+
   };
 
-  const getFirstMember = (sectionId) => {
+
+  const getFirstMember = (
+    sectionId
+  ) => {
+
     const sectionMembers =
-      getMembersBySection(sectionId);
+      getMembersBySection(
+        sectionId
+      );
 
-    return sectionMembers[0] || null;
+    return (
+      sectionMembers[0] ||
+      null
+    );
+
   };
+
 
   // =========================================================
   // LOADING
   // =========================================================
 
   if (loading) {
+
     return (
+
       <div className="organization-page">
 
         <section className="page-header">
+
           <div className="page-header-container">
 
             <span>
@@ -183,7 +216,9 @@ function Organization() {
             </p>
 
           </div>
+
         </section>
+
 
         <section className="organization-section">
 
@@ -208,6 +243,7 @@ function Organization() {
               }}
             />
 
+
             <p>
               Memuat struktur organisasi...
             </p>
@@ -215,6 +251,7 @@ function Organization() {
           </div>
 
         </section>
+
 
         <style>
           {`
@@ -231,18 +268,24 @@ function Organization() {
         </style>
 
       </div>
+
     );
+
   }
+
 
   // =========================================================
   // ERROR
   // =========================================================
 
   if (error) {
+
     return (
+
       <div className="organization-page">
 
         <section className="page-header">
+
           <div className="page-header-container">
 
             <span>
@@ -260,7 +303,9 @@ function Organization() {
             </p>
 
           </div>
+
         </section>
+
 
         <section className="organization-section">
 
@@ -281,13 +326,16 @@ function Organization() {
               🏢
             </div>
 
+
             <h2>
               Gagal Memuat Struktur
             </h2>
 
+
             <p>
               {error}
             </p>
+
 
             <button
               type="button"
@@ -310,63 +358,89 @@ function Organization() {
         </section>
 
       </div>
+
     );
+
   }
+
 
   // =========================================================
   // CARI BAGIAN UTAMA
   // =========================================================
 
-  const ketuaSection = sections.find(
-    (section) =>
-      section.name.toLowerCase() ===
-      "ketua"
-  );
+  const ketuaSection =
+    sections.find(
+      (section) =>
+        section.name
+          ?.toLowerCase() ===
+        "ketua"
+    );
 
-  const wakilSection = sections.find(
-    (section) => {
-      const name =
-        section.name.toLowerCase();
 
-      return (
-        name.includes("wakil") &&
-        name.includes("ketua")
-      );
-    }
-  );
+  const wakilSection =
+    sections.find(
+      (section) => {
 
-  const sekretarisSection = sections.find(
-    (section) =>
-      section.name
-        .toLowerCase()
-        .includes("sekretaris")
-  );
+        const name =
+          section.name
+            ?.toLowerCase() ||
+          "";
 
-  const bendaharaSection = sections.find(
-    (section) =>
-      section.name
-        .toLowerCase()
-        .includes("bendahara")
-  );
+        return (
+          name.includes("wakil") &&
+          name.includes("ketua")
+        );
 
-  // Bagian selain struktur utama
-  const divisionSections = sections.filter(
-    (section) => {
-      const name =
-        section.name.toLowerCase();
+      }
+    );
 
-      return (
-        section.id !==
-          ketuaSection?.id &&
-        section.id !==
-          wakilSection?.id &&
-        section.id !==
-          sekretarisSection?.id &&
-        section.id !==
-          bendaharaSection?.id
-      );
-    }
-  );
+
+  const sekretarisSection =
+    sections.find(
+      (section) =>
+        section.name
+          ?.toLowerCase()
+          .includes("sekretaris")
+    );
+
+
+  const bendaharaSection =
+    sections.find(
+      (section) =>
+        section.name
+          ?.toLowerCase()
+          .includes("bendahara")
+    );
+
+
+  // =========================================================
+  // BAGIAN SELAIN STRUKTUR UTAMA
+  // =========================================================
+
+  const divisionSections =
+    sections.filter(
+      (section) => {
+
+        const name =
+          section.name
+            ?.toLowerCase() ||
+          "";
+
+
+        return (
+          section.id !==
+            ketuaSection?.id &&
+          section.id !==
+            wakilSection?.id &&
+          section.id !==
+            sekretarisSection?.id &&
+          section.id !==
+            bendaharaSection?.id
+        );
+
+      }
+    );
+
 
   // =========================================================
   // CARD ANGGOTA
@@ -377,8 +451,15 @@ function Organization() {
     section,
     isMain = false
   ) => {
+
+    // =======================================================
+    // BELUM ADA ANGGOTA
+    // =======================================================
+
     if (!member) {
+
       return (
+
         <div
           className={`org-card ${
             isMain ? "main" : ""
@@ -386,20 +467,28 @@ function Organization() {
         >
 
           <div className="org-photo">
+
             <span>
               Foto
             </span>
+
           </div>
+
 
           <div className="org-info">
 
             <span className="org-position">
-              {section?.name?.toUpperCase()}
+
+              {section?.name
+                ?.toUpperCase()}
+
             </span>
+
 
             <h3>
               Belum Ada Anggota
             </h3>
+
 
             <p>
               {section?.name}
@@ -408,10 +497,18 @@ function Organization() {
           </div>
 
         </div>
+
       );
+
     }
 
+
+    // =======================================================
+    // ADA ANGGOTA
+    // =======================================================
+
     return (
+
       <div
         className={`org-card ${
           isMain ? "main" : ""
@@ -421,49 +518,75 @@ function Organization() {
         <div className="org-photo">
 
           {member.photo ? (
+
             <img
               src={member.photo}
-              alt={member.name}
+              alt={
+                member.name ||
+                "Anggota"
+              }
               loading="lazy"
             />
+
           ) : (
+
             <div className="org-photo-placeholder">
+
               {member.name
                 ?.charAt(0)
-                ?.toUpperCase() || "?"}
+                ?.toUpperCase() ||
+                "?"}
+
             </div>
+
           )}
 
         </div>
 
+
         <div className="org-info">
 
           <span className="org-position">
-            {section?.name?.toUpperCase()}
+
+            {section?.name
+              ?.toUpperCase()}
+
           </span>
+
 
           <h3>
             {member.name}
           </h3>
 
+
           <p>
-            {member.position}
+            {member.position ||
+              member.jabatan ||
+              section?.name ||
+              "Anggota"}
           </p>
 
         </div>
 
       </div>
+
     );
+
   };
+
 
   // =========================================================
   // RENDER
   // =========================================================
 
   return (
+
     <div className="organization-page">
 
-      {/* HEADER */}
+
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <section className="page-header">
 
@@ -473,9 +596,11 @@ function Organization() {
             STRUKTUR ORGANISASI
           </span>
 
+
           <h1>
             Struktur Organisasi
           </h1>
+
 
           <p>
             Mengenal susunan kepengurusan
@@ -488,18 +613,23 @@ function Organization() {
       </section>
 
 
-      {/* ORGANIZATION */}
+      {/* =====================================================
+          ORGANIZATION
+      ===================================================== */}
 
       <section className="organization-section">
 
         <div className="organization-section-container">
 
-          {/* ================================================
+
+          {/* =================================================
               KETUA
           ================================================= */}
 
           {ketuaSection && (
+
             <>
+
               <div className="org-level">
 
                 {renderMemberCard(
@@ -512,24 +642,31 @@ function Organization() {
 
               </div>
 
+
               {(
                 wakilSection ||
                 sekretarisSection ||
                 bendaharaSection ||
                 divisionSections.length > 0
               ) && (
+
                 <div className="org-connector"></div>
+
               )}
+
             </>
+
           )}
 
 
-          {/* ================================================
+          {/* =================================================
               WAKIL
           ================================================= */}
 
           {wakilSection && (
+
             <>
+
               <div className="org-level">
 
                 {renderMemberCard(
@@ -541,61 +678,78 @@ function Organization() {
 
               </div>
 
+
               {(
                 sekretarisSection ||
                 bendaharaSection ||
                 divisionSections.length > 0
               ) && (
+
                 <div className="org-connector"></div>
+
               )}
+
             </>
+
           )}
 
 
-          {/* ================================================
+          {/* =================================================
               SEKRETARIS & BENDAHARA
           ================================================= */}
 
-          {(sekretarisSection ||
-            bendaharaSection) && (
+          {(
+            sekretarisSection ||
+            bendaharaSection
+          ) && (
+
             <>
 
               <div className="org-grid">
 
                 {sekretarisSection && (
+
                   renderMemberCard(
                     getFirstMember(
                       sekretarisSection.id
                     ),
                     sekretarisSection
                   )
+
                 )}
 
+
                 {bendaharaSection && (
+
                   renderMemberCard(
                     getFirstMember(
                       bendaharaSection.id
                     ),
                     bendaharaSection
                   )
+
                 )}
 
               </div>
 
-              {divisionSections.length >
-                0 && (
+
+              {divisionSections.length > 0 && (
+
                 <div className="org-connector"></div>
+
               )}
 
             </>
+
           )}
 
 
-          {/* ================================================
+          {/* =================================================
               DIVISI / BAGIAN LAIN
           ================================================= */}
 
           {divisionSections.length > 0 && (
+
             <>
 
               <div className="division-title">
@@ -603,6 +757,7 @@ function Organization() {
                 <span>
                   BIDANG / DIVISI
                 </span>
+
 
                 <h2>
                   Divisi Organisasi
@@ -621,21 +776,28 @@ function Organization() {
                         section.id
                       );
 
-                    // Jika bagian memiliki anggota
-                    // tampilkan seluruh anggotanya
+
+                    // =======================================
+                    // BAGIAN MEMILIKI ANGGOTA
+                    // =======================================
+
                     if (
-                      sectionMembers.length >
-                      0
+                      sectionMembers.length > 0
                     ) {
+
                       return (
+
                         <div
                           className="division-group"
                           key={section.id}
                         >
 
                           <div className="division-group-title">
+
                             {section.name}
+
                           </div>
+
 
                           <div className="division-group-members">
 
@@ -650,19 +812,29 @@ function Organization() {
                           </div>
 
                         </div>
+
                       );
+
                     }
 
-                    // Jika belum ada anggota
+
+                    // =======================================
+                    // BAGIAN BELUM MEMILIKI ANGGOTA
+                    // =======================================
+
                     return (
+
                       <div
                         className="division-group"
                         key={section.id}
                       >
 
                         <div className="division-group-title">
+
                           {section.name}
+
                         </div>
+
 
                         {renderMemberCard(
                           null,
@@ -670,21 +842,25 @@ function Organization() {
                         )}
 
                       </div>
+
                     );
+
                   }
                 )}
 
               </div>
 
             </>
+
           )}
 
 
-          {/* ================================================
+          {/* =================================================
               BELUM ADA DATA
           ================================================= */}
 
           {sections.length === 0 && (
+
             <div
               style={{
                 textAlign: "center",
@@ -701,10 +877,12 @@ function Organization() {
                 🏢
               </div>
 
+
               <h2>
                 Struktur Organisasi
                 Belum Tersedia
               </h2>
+
 
               <p>
                 Data struktur organisasi
@@ -712,6 +890,7 @@ function Organization() {
               </p>
 
             </div>
+
           )}
 
         </div>
@@ -719,7 +898,10 @@ function Organization() {
       </section>
 
     </div>
+
   );
+
 }
+
 
 export default Organization;

@@ -220,12 +220,66 @@ export const getMembers = async () => {
     orderBy("order", "asc")
   );
 
-  const snapshot = await getDocs(memberQuery);
+  const snapshot =
+    await getDocs(memberQuery);
 
-  return snapshot.docs.map((document) => ({
-    id: document.id,
-    ...document.data(),
-  }));
+  const members =
+    snapshot.docs.map(
+      (document) => ({
+        id: document.id,
+        ...document.data(),
+      })
+    );
+
+  // ==========================================
+  // AMBIL FOTO DARI API
+  // SUMBER DATA:
+  // users/{uid}.photo
+  // ==========================================
+
+  let photos = {};
+
+  try {
+    const response =
+      await fetch(
+        "/api/public-member-photos"
+      );
+
+    if (response.ok) {
+      const result =
+        await response.json();
+
+      if (
+        result.success &&
+        result.photos
+      ) {
+        photos =
+          result.photos;
+      }
+    }
+  } catch (error) {
+    console.error(
+      "Gagal mengambil foto anggota:",
+      error
+    );
+  }
+
+  // ==========================================
+  // GABUNGKAN DATA MEMBER + FOTO
+  // ==========================================
+
+  return members.map(
+    (member) => ({
+      ...member,
+
+      // FOTO PRIORITAS DARI users/{uid}.photo
+      photo:
+        member.uid &&
+        photos[member.uid]
+          ? photos[member.uid]
+          : "",
+    })
+  );
 };
 
 export const getMemberById = async (id) => {

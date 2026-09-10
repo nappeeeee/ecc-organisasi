@@ -3,6 +3,7 @@ import {
   getDocs,
   query,
   orderBy,
+  where,
   doc,
   updateDoc,
 } from "firebase/firestore";
@@ -178,15 +179,23 @@ export const getMembersWithAttendance =
 
 
           /*
-           * FOTO SEKARANG DIAMBIL
-           * DARI users/{uid}.photo
+           * FOTO UTAMA DIAMBIL
+           * DARI organization_members.photo
            *
-           * BUKAN DARI
-           * organization_members.photo
+           * Jika belum tersedia, gunakan
+           * users/{uid}.photo sebagai fallback.
            */
 
           const photo =
-            user?.photo || "";
+            member.photo ||
+            user?.photo ||
+            "";
+
+
+          const photoPublicId =
+            member.photoPublicId ||
+            user?.photoPublicId ||
+            "";
 
 
           const name =
@@ -212,9 +221,7 @@ export const getMembersWithAttendance =
 
             photo,
 
-            photoPublicId:
-              user?.photoPublicId ||
-              "",
+            photoPublicId,
 
           };
 
@@ -437,6 +444,10 @@ export const updateProfilePhoto =
     }
 
 
+    // =====================================================
+    // 1. UPDATE USERS/{UID}
+    // =====================================================
+
     const userRef =
       doc(
         db,
@@ -462,9 +473,83 @@ export const updateProfilePhoto =
     );
 
 
+    // =====================================================
+    // 2. CARI DATA MEMBER BERDASARKAN UID
+    // =====================================================
+
+    const memberQuery =
+      query(
+        membersCollection,
+        where(
+          "uid",
+          "==",
+          uid
+        )
+      );
+
+
+    const memberSnapshot =
+      await getDocs(
+        memberQuery
+      );
+
+
+    // =====================================================
+    // 3. UPDATE FOTO DI ORGANIZATION_MEMBERS
+    // =====================================================
+
+    if (
+      !memberSnapshot.empty
+    ) {
+
+      const updatePromises =
+        memberSnapshot.docs.map(
+          async (memberDocument) => {
+
+            const memberRef =
+              doc(
+                db,
+                "organization_members",
+                memberDocument.id
+              );
+
+
+            await updateDoc(
+              memberRef,
+              {
+
+                photo:
+                  photo || "",
+
+                photoPublicId:
+                  photoPublicId || "",
+
+                updatedAt:
+                  new Date(),
+
+              }
+            );
+
+          }
+        );
+
+
+      await Promise.all(
+        updatePromises
+      );
+
+    }
+
+
+    // =====================================================
+    // SELESAI
+    // =====================================================
+
     return {
+
       success:
         true,
+
     };
 
   };
